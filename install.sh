@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Autopilot Install Script
-# Creates symlinks from this repo to ~/.claude/
+# Creates symlinks from this repo to supported agent config directories.
 
 set -e
 
@@ -34,6 +34,42 @@ elif [ -f ~/.claude/AGENTS.md ]; then
 fi
 ln -s "$SCRIPT_DIR/AGENTS.md" ~/.claude/AGENTS.md
 echo "  Linked: AGENTS.md"
+
+# Install shared instructions/specs and skills for non-Claude agents. These
+# agents do not consume Claude slash-command files directly, but run.sh points
+# them at these specs during headless execution.
+echo ""
+echo "Installing shared instructions for Codex, OpenCode, and Command Code..."
+
+link_agent_file() {
+    local source="$1"
+    local target="$2"
+    local label="$3"
+
+    mkdir -p "$(dirname "$target")"
+    if [ -L "$target" ]; then
+        rm "$target"
+    elif [ -f "$target" ] || [ -d "$target" ]; then
+        echo "Backing up existing $target to $target.bak"
+        mv "$target" "$target.bak"
+    fi
+    ln -s "$source" "$target"
+    echo "  Linked: $label"
+}
+
+link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.codex/AGENTS.md "AGENTS.md → ~/.codex/AGENTS.md"
+link_agent_file "$SCRIPT_DIR/commands" ~/.codex/autopilot/commands "commands/ → ~/.codex/autopilot/commands"
+link_agent_file "$SCRIPT_DIR/skills/autopilot" ~/.agents/skills/autopilot "autopilot skill → ~/.agents/skills/autopilot"
+
+link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.config/opencode/AGENTS.md "AGENTS.md → ~/.config/opencode/AGENTS.md"
+link_agent_file "$SCRIPT_DIR/commands" ~/.config/opencode/autopilot/commands "commands/ → ~/.config/opencode/autopilot/commands"
+link_agent_file "$SCRIPT_DIR/skills/autopilot" ~/.config/opencode/skills/autopilot "autopilot skill → ~/.config/opencode/skills/autopilot"
+
+link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.commandcode/AGENTS.md "AGENTS.md → ~/.commandcode/AGENTS.md"
+link_agent_file "$SCRIPT_DIR/commands" ~/.commandcode/autopilot/commands "commands/ → ~/.commandcode/autopilot/commands"
+link_agent_file "$SCRIPT_DIR/skills/autopilot" ~/.commandcode/skills/autopilot "autopilot skill → ~/.commandcode/skills/autopilot"
+
+link_agent_file "$SCRIPT_DIR/skills/autopilot" ~/.claude/skills/autopilot "autopilot skill → ~/.claude/skills/autopilot"
 
 # Install stop-hook for loop mechanism
 echo ""
@@ -123,9 +159,14 @@ echo ""
 echo "  autopilot       - Token-frugal wrapper (from terminal)"
 echo "  autopilot-cleanup - Kill orphaned Claude processes (from terminal)"
 echo ""
+echo "Agents supported: claude, codex, opencode, cmd"
+echo ""
 echo "Usage:"
 echo "  autopilot docs/autopilot/feature/feature.json    # Fresh context per requirement"
 echo "  autopilot tasks.json --batch 3            # 3 requirements per session"
+echo "  autopilot tasks.json --agent codex        # Use Codex CLI"
+echo "  autopilot tasks.json --agent opencode     # Use OpenCode CLI"
+echo "  autopilot tasks.json --agent cmd          # Use Command Code CLI"
 echo ""
 echo "Run '/autopilot init' in your project to set up configuration."
 echo ""

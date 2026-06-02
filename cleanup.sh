@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# cleanup.sh - Kill orphaned Claude Code processes
+# cleanup.sh - Kill orphaned agent processes
 #
-# Claude Code can leave behind orphaned MCP servers, subagent processes,
+# Agent CLIs can leave behind orphaned MCP servers, subagent processes,
 # and worker threads that consume memory indefinitely. This script finds
 # and kills them.
 #
@@ -35,11 +35,11 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "cleanup.sh - Kill orphaned Claude Code processes"
+            echo "cleanup.sh - Kill orphaned agent processes"
             echo ""
             echo "Usage:"
             echo "  ./cleanup.sh           Kill background/orphaned processes only (safe)"
-            echo "  ./cleanup.sh --all     Kill ALL Claude-related processes"
+            echo "  ./cleanup.sh --all     Kill ALL agent-related processes"
             echo "  ./cleanup.sh --dry-run Show what would be killed"
             echo ""
             echo "By default, only kills processes with no controlling terminal (orphans)."
@@ -54,29 +54,54 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Patterns matching Claude Code and its typical child processes
-PATTERNS="(/home/joe/.local/bin/claude|claude-mem.*mcp-server|chroma-mcp|worker-service\.cjs)"
+is_supported_agent_process() {
+    local cmdline="$1"
+    local previous_base=""
+    local token base
+
+    [[ "$cmdline" == *"claude-mem"*mcp-server* ]] && return 0
+    [[ "$cmdline" == *"chroma-mcp"* ]] && return 0
+    [[ "$cmdline" == *"worker-service"* ]] && return 0
+
+    for token in $cmdline; do
+        base=$(basename -- "$token")
+        case "$base" in
+            claude)
+                return 0
+                ;;
+            exec)
+                [[ "$previous_base" == "codex" ]] && return 0
+                ;;
+            run)
+                [[ "$previous_base" == "opencode" ]] && return 0
+                ;;
+            -p|--print)
+                [[ "$previous_base" == "cmd" ]] && return 0
+                ;;
+        esac
+        previous_base="$base"
+    done
+
+    return 1
+}
 
 FOUND=0
 PIDS=""
 
-echo -e "${BLUE}Scanning for Claude-related processes...${NC}"
+echo -e "${BLUE}Scanning for agent-related processes...${NC}"
 if [[ "$MODE" == "background" ]]; then
     echo -e "${BLUE}Mode: background only (orphans without controlling terminal)${NC}"
 else
-    echo -e "${YELLOW}Mode: ALL Claude-related processes${NC}"
+    echo -e "${YELLOW}Mode: ALL agent-related processes${NC}"
 fi
 echo ""
 
-while IFS= read -r line; do
-    pid=$(echo "$line" | awk '{print $2}')
-    tty=$(echo "$line" | awk '{print $7}')
-    start=$(echo "$line" | awk '{print $9}')
-    mem=$(echo "$line" | awk '{print $6}')
-    cmd=$(echo "$line" | awk '{for(i=11;i<=NF;i++) printf "%s ", $i}' | head -c 100)
+while read -r pid tty rss age cmd; do
+    [[ -z "$pid" ]] && continue
 
     # Skip our own script
     [[ "$pid" == "$$" ]] && continue
+    is_supported_agent_process "$cmd" || continue
 
     # In background mode, skip processes with a controlling terminal
     if [[ "$MODE" == "background" && "$tty" != "?" ]]; then
@@ -84,25 +109,25 @@ while IFS= read -r line; do
     fi
 
     # Convert RSS (KB) to MB for display
-    mem_mb=$((mem / 1024))
+    mem_mb=$((rss / 1024))
 
     FOUND=$((FOUND + 1))
     PIDS="$PIDS $pid"
 
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "  ${YELLOW}Would kill${NC} PID $pid (${mem_mb}MB, tty=$tty, started=$start)"
-        echo -e "    $cmd"
+        echo -e "  ${YELLOW}Would kill${NC} PID $pid (${mem_mb}MB, tty=$tty, age=${age}s)"
+        echo -e "    ${cmd:0:100}"
     else
-        echo -e "  ${RED}Killing${NC} PID $pid (${mem_mb}MB, tty=$tty, started=$start)"
-        echo -e "    $cmd"
+        echo -e "  ${RED}Killing${NC} PID $pid (${mem_mb}MB, tty=$tty, age=${age}s)"
+        echo -e "    ${cmd:0:100}"
         kill -TERM "$pid" 2>/dev/null || true
     fi
-done < <(ps aux 2>/dev/null | grep -E "$PATTERNS" | grep -v -E "grep|cleanup\.sh" || true)
+done < <(ps -eo pid=,tty=,rss=,etimes=,args= 2>/dev/null || true)
 
 echo ""
 
 if [[ $FOUND -eq 0 ]]; then
-    echo -e "${GREEN}No Claude-related processes found${NC}"
+    echo -e "${GREEN}No agent-related processes found${NC}"
     exit 0
 fi
 

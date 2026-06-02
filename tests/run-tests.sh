@@ -54,6 +54,48 @@ exited_with() {
     [[ "$EXIT_CODE" == "$1" ]]
 }
 
+make_fake_agent_bin() {
+    local bindir="$1"
+    local name="$2"
+    local behavior="$3"
+    local target_file="$4"
+
+    cat > "$bindir/$name" << EOF
+#!/bin/bash
+printf '%s\n' "\$0 \$*" >> "$target_file"
+case "$behavior" in
+    complete_one)
+        prompt="\${*: -1}"
+        taskfile=\$(printf '%s\n' "\$prompt" | sed -n 's|^/autopilot \([^ ]*\.json\).*|\1|p' | head -1)
+        if [[ -n "\$taskfile" && -f "\$taskfile" ]]; then
+            tmp="\${taskfile}.tmp"
+            jq '([.requirements | to_entries[] | select(.value.passes != true and .value.stuck != true and .value.invalidTest != true) | .key][0]) as \$i | .requirements[\$i].passes = true' "\$taskfile" > "\$tmp"
+            mv "\$tmp" "\$taskfile"
+        fi
+        while true; do sleep 1; done
+        ;;
+    invalid_one)
+        prompt="\${*: -1}"
+        taskfile=\$(printf '%s\n' "\$prompt" | sed -n 's|^/autopilot \([^ ]*\.json\).*|\1|p' | head -1)
+        if [[ -n "\$taskfile" && -f "\$taskfile" ]]; then
+            tmp="\${taskfile}.tmp"
+            jq '([.requirements | to_entries[] | select(.value.passes != true and .value.stuck != true and .value.invalidTest != true) | .key][0]) as \$i | .requirements[\$i].invalidTest = true' "\$taskfile" > "\$tmp"
+            mv "\$tmp" "\$taskfile"
+        fi
+        while true; do sleep 1; done
+        ;;
+    wait_for_stop)
+        trap 'printf "%s\n" TERM >> "$target_file"; exit 0' TERM
+        while true; do sleep 1; done
+        ;;
+    sleep)
+        while true; do sleep 1; done
+        ;;
+esac
+EOF
+    chmod +x "$bindir/$name"
+}
+
 echo "Running run.sh tests..."
 echo ""
 
@@ -72,11 +114,17 @@ test_it "-h also shows help" 'output_contains "Usage:" && exited_with 0'
 
 # Test: No arguments shows error
 OUTPUT=$(./run.sh 2>&1) ; EXIT_CODE=$?
-test_it "no arguments shows error" 'output_contains "No task file specified"'
+test_it "no arguments shows error" 'output_contains "No task file or command specified"'
 
 # Test: Non-existent file shows error
 OUTPUT=$(./run.sh nonexistent.json 2>&1) ; EXIT_CODE=$?
 test_it "non-existent file shows error" 'output_contains "not found"'
+
+# Test: Absolute JSON path is treated as task file, not command mode
+ABS_TASKFILE="$(pwd)/tests/fixtures/incomplete.json"
+OUTPUT=$(./run.sh "$ABS_TASKFILE" --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "absolute JSON path: task mode" 'output_contains "Task File:" && output_contains "$ABS_TASKFILE"'
 
 # Test: Unknown option shows error
 OUTPUT=$(./run.sh --unknown 2>&1) ; EXIT_CODE=$?
@@ -128,6 +176,100 @@ EXIT_CODE=$?
 test_it "dry-run: shows command that would run" 'output_contains "[DRY RUN] Would execute"'
 test_it "dry-run: mentions claude command" 'output_contains "claude"'
 test_it "dry-run: stops after simulated sessions" 'output_contains "Stopping after"'
+
+echo ""
+
+# ============================================
+# Agent selection
+# ============================================
+echo "## Agent selection"
+
+# Test: --agent codex changes the rendered command
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent codex --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--agent codex: uses codex exec" 'output_contains "Agent: codex" && output_contains "codex exec --sandbox workspace-write"'
+
+# Test: --agent opencode changes the rendered command
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent opencode --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--agent opencode: uses opencode run mode" 'output_contains "Agent: opencode" && output_contains "opencode run --dangerously-skip-permissions"'
+
+# Test: --agent cmd changes the rendered command
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent cmd --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--agent cmd: uses command code headless mode" 'output_contains "Agent: cmd" && output_contains "cmd -p" && output_contains "--yolo"'
+
+# Test: AUTOPILOT_AGENT env var is honored
+OUTPUT=$(AUTOPILOT_AGENT=codex ./run.sh tests/fixtures/incomplete.json --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "AUTOPILOT_AGENT: sets default agent" 'output_contains "Agent: codex" && output_contains "codex exec --sandbox workspace-write"'
+
+# Test: unknown agent shows error
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent nope --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--agent unknown: shows error" 'output_contains "Unknown agent" && exited_with 1'
+
+# Test: --model is passed through to non-Claude agents
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent codex --model gpt-5.4 --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--model codex: passes model flag" 'output_contains "codex exec --sandbox workspace-write --model gpt-5.4"'
+
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent opencode --model openai/gpt-5.4 --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--model opencode: passes model flag" 'output_contains "opencode run --dangerously-skip-permissions --model openai/gpt-5.4"'
+
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent cmd --model claude-sonnet-4-6 --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--model cmd: passes model flag" 'output_contains "cmd -p" && output_contains "--model claude-sonnet-4-6"'
+
+echo ""
+
+# ============================================
+# Agent execution behavior
+# ============================================
+echo "## Agent execution behavior"
+
+TMP_TEST_DIR=$(mktemp -d)
+FAKE_BIN="$TMP_TEST_DIR/bin"
+mkdir -p "$FAKE_BIN"
+
+TASK_COPY="$TMP_TEST_DIR/incomplete.json"
+cp tests/fixtures/incomplete.json "$TASK_COPY"
+make_fake_agent_bin "$FAKE_BIN" codex complete_one "$TMP_TEST_DIR/codex.log"
+OUTPUT=$(PATH="$FAKE_BIN:$PATH" timeout 20 ./run.sh "$TASK_COPY" --agent codex --batch 1 --delay 0 2>&1)
+EXIT_CODE=$?
+test_it "codex execution: launches fake binary and advances task" 'output_contains "Batch complete (1 requirement(s))" && output_contains "+ 1 requirement(s) completed" && grep -q "codex exec --sandbox workspace-write" "$TMP_TEST_DIR/codex.log"'
+
+TASK_COPY="$TMP_TEST_DIR/invalid.json"
+cp tests/fixtures/incomplete.json "$TASK_COPY"
+make_fake_agent_bin "$FAKE_BIN" codex invalid_one "$TMP_TEST_DIR/codex-invalid.log"
+OUTPUT=$(PATH="$FAKE_BIN:$PATH" timeout 20 ./run.sh "$TASK_COPY" --agent codex --batch 1 --delay 0 2>&1)
+EXIT_CODE=$?
+test_it "invalidTest execution: reports invalid-test progress" 'output_contains "Batch complete (1 requirement(s))" && output_contains "+ 1 requirement(s) invalid test"'
+
+TASK_COPY="$TMP_TEST_DIR/stop.json"
+cp tests/fixtures/incomplete.json "$TASK_COPY"
+make_fake_agent_bin "$FAKE_BIN" cmd wait_for_stop "$TMP_TEST_DIR/cmd.log"
+PATH="$FAKE_BIN:$PATH" ./run.sh "$TASK_COPY" --agent cmd --batch 1 --delay 0 > "$TMP_TEST_DIR/stop.out" 2>&1 &
+RUN_PID=$!
+sleep 2
+kill -USR1 "$RUN_PID" 2>/dev/null || true
+wait "$RUN_PID" 2>/dev/null
+OUTPUT=$(cat "$TMP_TEST_DIR/stop.out" 2>/dev/null)
+EXIT_CODE=$?
+test_it "agent stop: terminates fake command-code process" 'output_contains "Stop signal received" && grep -q "TERM" "$TMP_TEST_DIR/cmd.log"'
+
+make_fake_agent_bin "$FAKE_BIN" opencode sleep "$TMP_TEST_DIR/opencode.log"
+PATH="$FAKE_BIN:$PATH" "$FAKE_BIN/opencode" run "cleanup probe" &
+FAKE_AGENT_PID=$!
+sleep 1
+OUTPUT=$(./cleanup.sh --dry-run 2>&1)
+EXIT_CODE=$?
+kill "$FAKE_AGENT_PID" 2>/dev/null || true
+wait "$FAKE_AGENT_PID" 2>/dev/null || true
+test_it "cleanup: detects fake opencode run process" 'output_contains "Would kill" && output_contains "opencode"'
+
+rm -rf "$TMP_TEST_DIR"
 
 echo ""
 

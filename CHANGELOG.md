@@ -2,6 +2,24 @@
 
 All notable changes to Autopilot will be documented in this file.
 
+## 2026-06-02
+
+### Added
+- **Multi-agent wrapper support** - `run.sh` now supports `--agent claude|codex|opencode|cmd` and `AUTOPILOT_AGENT`, allowing the same task loop to launch Claude Code, Codex CLI, OpenCode, or Command Code sessions. Claude keeps the existing slash-command path; other agents run headless with prompts that point at the shared Autopilot command specs.
+- **Shared agent installation targets** - `install.sh` now links `AGENTS.md`, command specs, and the Autopilot Agent Skill into Claude, Codex, OpenCode, and Command Code config locations while preserving the existing Claude slash-command and hook install.
+- **Autopilot Agent Skill** - Added `skills/autopilot/SKILL.md` so supported agents can discover the Autopilot workflow as a reusable Agent Skill.
+- **Install test coverage** - Added `tests/install-tests.sh` to verify installer behavior using an isolated `HOME`.
+- **Executable agent loop tests** - Added fake CLI coverage for non-interactive launch arguments, task progress, invalid-test progress, stop handling, and cleanup detection.
+
+### Fixed
+- **Stale no-argument test expectation** - Updated the shell test to match the current `run.sh` error message for missing task or command input.
+- **Codex automation syntax** - Switched Codex dry-run and execution commands from deprecated `--full-auto` to explicit `--sandbox workspace-write`.
+- **Agent exit codes and cleanup** - Preserved non-zero agent exit codes after `wait` and replaced machine-specific stale-process cleanup patterns with token-based matching for Claude, Codex, OpenCode, and Command Code.
+- **OpenCode automation syntax** - Switched OpenCode execution from legacy prompt mode to current `opencode run --dangerously-skip-permissions`.
+- **OpenCode permission compatibility** - Added `AUTOPILOT_OPENCODE_PERMISSION_FLAG` so older or differently configured OpenCode installs can override or disable the default permission bypass flag.
+- **Batch progress for invalid tests** - Count `invalidTest: true` as batch progress while monitoring a running agent session and report invalid-test progress in the session summary.
+- **Model forwarding** - Forward `--model` to Codex, OpenCode, and Command Code runners when supplied.
+
 ## 2026-03-24
 
 ### Added
