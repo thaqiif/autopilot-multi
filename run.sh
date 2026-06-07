@@ -13,6 +13,7 @@
 #   --batch N       Complete N requirements per session (default: 1, task mode only)
 #   --max N         Maximum iterations/command runs (default: 10, command mode only)
 #   --delay N       Seconds to wait between sessions (default: 2)
+#   --timeout N     Idle timeout in seconds before killing session (default: 600)
 #   --agent AGENT   Agent CLI to use: claude, codex, opencode, cmd
 #   --model MODEL   Model to use when supported by the selected agent
 #   --cleanup       Kill stale agent processes before starting
@@ -161,6 +162,7 @@ cleanup_stale_processes() {
 BATCH_SIZE="1"  # Default: 1 requirement per session (fresh context)
 MAX_ITERATIONS=10  # Default: 10 iterations for command mode
 DELAY=2
+IDLE_TIMEOUT=600  # Default: 10 minutes with no progress = assume stuck
 DRY_RUN=false
 CLEANUP=false
 AGENT="${AUTOPILOTAGENT_AGENT:-claude}"  # claude, codex, opencode, or cmd
@@ -198,6 +200,10 @@ while [[ $# -gt 0 ]]; do
             DELAY="$2"
             shift 2
             ;;
+        --timeout)
+            IDLE_TIMEOUT="$2"
+            shift 2
+            ;;
         --model)
             MODEL="$2"
             shift 2
@@ -225,6 +231,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --batch N       Complete N requirements per session (default: 1, task mode)"
             echo "  --max N         Maximum command runs (default: 10, command mode)"
             echo "  --delay N       Seconds to wait between sessions (default: 2)"
+            echo "  --timeout N     Idle timeout in seconds before killing session (default: 600)"
             echo "  --agent AGENT   Agent CLI: claude, codex, opencode, cmd (default: claude)"
             echo "  --model MODEL   Model to use when supported by the selected agent"
             echo "  --cleanup       Kill stale agent processes before starting"
@@ -733,7 +740,7 @@ LOOPSTATE
 
                 # Timeout after 10 minutes of no activity
                 IDLE_SECONDS=$((IDLE_SECONDS + 2))
-                if [[ "$IDLE_SECONDS" -ge 600 ]]; then
+                if [[ "$IDLE_SECONDS" -ge "$IDLE_TIMEOUT" ]]; then
                     echo -e "${YELLOW}Timeout - terminating session${NC}"
                     kill_session "$AGENT_PID"
                     break
@@ -857,7 +864,6 @@ while true; do
         AGENT_PID=$CURRENT_AGENT_PID
 
         # Monitor for batch completion by checking task JSON
-        IDLE_TIMEOUT=600  # 10 minutes with no progress = assume stuck
         LAST_PROGRESS=0
         IDLE_SECONDS=0
 
