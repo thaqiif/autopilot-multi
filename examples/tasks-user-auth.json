@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/tasks.schema.json",
+  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/tasks.schema.json",
   "name": "user-auth",
   "description": "User authentication system with email/password and OAuth",
   "goals": [

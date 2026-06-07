@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# stop-hook.sh - Autopilot loop mechanism
+# stop-hook.sh - Autopilotagent loop mechanism
 #
 # This hook intercepts Claude's stop events and either:
 # 1. Blocks exit and re-feeds the prompt (continues TDD loop)
 # 2. Forces exit when COMPLETE is detected or max iterations reached
 #
-# Based on the Ralph Loop technique but bundled with autopilot.
+# Based on the Ralph Loop technique but bundled with autopilotagent.
 #
 # Hook Input (JSON via stdin):
 #   { "transcript_path": "/path/to/transcript.jsonl", ... }
@@ -19,9 +19,9 @@
 # Don't exit on error - we need to handle errors gracefully
 set +e
 
-# State file location — use AUTOPILOT_STATE_DIR if set (parallel agent support),
-# fall back to .autopilot/ for standalone use
-STATE_DIR="${AUTOPILOT_STATE_DIR:-.autopilot}"
+# State file location — use AUTOPILOTAGENT_STATE_DIR if set (parallel agent support),
+# fall back to .autopilotagent/ for standalone use
+STATE_DIR="${AUTOPILOTAGENT_STATE_DIR:-.autopilotagent}"
 STATE_FILE="$STATE_DIR/loop-state.md"
 
 # Read hook input from stdin

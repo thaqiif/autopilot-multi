@@ -12,7 +12,7 @@ To guide an AI assistant in creating a detailed, human-readable Product Requirem
 4.  **Conversational Flow:** After each answer, briefly acknowledge the response (one sentence max), then ask the next question. If an answer raises a new question, ask it as a natural follow-up before moving on. Keep a running count so the user knows progress (e.g., "Question 3 of 12"). It's okay if the total count shifts as follow-ups arise — just update the estimate.
 5.  **Completion:** Once all questions are answered, confirm: "That covers all my questions. I'll write the PRD now."
 6.  **Generate PRD:** Based on the initial prompt and all clarifying conversations, generate a PRD using the structure outlined below. The PRD must have **no Open Questions section** — all questions should have been resolved during clarification.
-7.  **Save PRD:** Save the generated document as `[feature-name].md` inside the `docs/autopilot/[feature-name]/` directory. Create the directory if needed.
+7.  **Save PRD:** Save the generated document as `[feature-name].md` inside the `docs/autopilotagent/[feature-name]/` directory. Create the directory if needed.
 
 ## Clarifying Questions (Guidelines)
 
@@ -91,12 +91,12 @@ Assume the primary reader of the PRD is a **human** who will review and approve 
 ## Output
 
 *   **Format:** Markdown (`.md`)
-*   **Location:** `docs/autopilot/[feature-name]/`
+*   **Location:** `docs/autopilotagent/[feature-name]/`
 *   **Filename:** `[feature-name].md`
 
 ## Next Step
 
-After the PRD is approved, use `/tasks [prd-file]` to convert it to a machine-readable JSON format for autopilot execution.
+After the PRD is approved, use `/tasks [prd-file]` to convert it to a machine-readable JSON format for autopilotagent execution.
 
 ## Final instructions
 

@@ -1,9 +1,9 @@
 {
-  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/analytics.schema.json",
+  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/analytics.schema.json",
   "sessionId": "2026-01-10-user-auth-1",
   "startedAt": "2026-01-10T10:00:00Z",
   "completedAt": "2026-01-10T10:45:00Z",
-  "taskFile": "docs/autopilot/user-auth/user-auth.json",
+  "taskFile": "docs/autopilotagent/user-auth/user-auth.json",
   "mode": "tasks",
   "maxIterations": 15,
   "actualIterations": 16,
@@ -101,7 +101,7 @@
         "description": "Database connection refused due to sandbox blocking port 5432",
         "occurrences": 12,
         "affectedRequirements": ["2"],
-        "suggestedFix": "Set sandbox: false for tests feedback loop in autopilot.json"
+        "suggestedFix": "Set sandbox: false for tests feedback loop in autopilotagent.json"
       }
     ]
   }

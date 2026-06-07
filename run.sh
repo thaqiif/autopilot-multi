@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# run.sh - Token-frugal wrapper for Claude Code autopilot
+# run.sh - Token-frugal wrapper for Claude Code autopilotagent
 #
-# Runs autopilot with fresh context for each requirement by invoking
+# Runs autopilotagent with fresh context for each requirement by invoking
 # Claude in a loop, completing one requirement per session.
 #
 # Usage:
@@ -20,10 +20,10 @@
 #   --help          Show this help message
 #
 # Examples:
-#   ./run.sh docs/autopilot/feature.json
-#   ./run.sh docs/autopilot/feature.json --batch 3
-#   ./run.sh docs/autopilot/feature.json --model sonnet
-#   ./run.sh docs/autopilot/feature.json --delay 5
+#   ./run.sh docs/autopilotagent/feature.json
+#   ./run.sh docs/autopilotagent/feature.json --batch 3
+#   ./run.sh docs/autopilotagent/feature.json --model sonnet
+#   ./run.sh docs/autopilotagent/feature.json --delay 5
 #   ./run.sh /my-command --max 5
 #   ./run.sh /review-pr 123 --max 3
 
@@ -163,9 +163,9 @@ MAX_ITERATIONS=10  # Default: 10 iterations for command mode
 DELAY=2
 DRY_RUN=false
 CLEANUP=false
-AGENT="${AUTOPILOT_AGENT:-claude}"  # claude, codex, opencode, or cmd
+AGENT="${AUTOPILOTAGENT_AGENT:-claude}"  # claude, codex, opencode, or cmd
 MODEL=""  # Empty means use the selected agent's default
-OPENCODE_PERMISSION_FLAG="${AUTOPILOT_OPENCODE_PERMISSION_FLAG:---dangerously-skip-permissions}"
+OPENCODE_PERMISSION_FLAG="${AUTOPILOTAGENT_OPENCODE_PERMISSION_FLAG:---dangerously-skip-permissions}"
 TASKFILE=""
 COMMAND=""  # Slash command for command loop mode
 COMMAND_ARGS=""  # Arguments for the slash command
@@ -215,7 +215,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "run.sh - Token-frugal wrapper for agentic autopilot"
+            echo "run.sh - Token-frugal wrapper for agentic autopilotagent"
             echo ""
             echo "Usage:"
             echo "  ./run.sh <taskfile.json> [options]    # Task file mode"
@@ -231,7 +231,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --dry-run       Show what would be done without executing"
             echo "  --help          Show this help message"
             echo ""
-            echo "Task mode runs autopilot in a loop, starting a fresh"
+            echo "Task mode runs autopilotagent in a loop, starting a fresh"
             echo "session for each batch of requirements."
             echo ""
             echo "Command mode runs a slash command repeatedly with fresh sessions."
@@ -353,7 +353,7 @@ else
         echo -e "${RED}Error: Task file not found: $TASKFILE${NC}"
         echo ""
         echo "Common task file locations:"
-        echo "  docs/autopilot/<feature>.json"
+        echo "  docs/autopilotagent/<feature>.json"
         echo "  tasks/<feature>.json"
         echo ""
         echo "Run '/tasks <prd-file.md>' to generate a task file from a PRD."
@@ -384,28 +384,28 @@ else
     fi
 fi
 
-# --- Path setup: per-feature dirs for task mode, shared .autopilot/ for command mode ---
+# --- Path setup: per-feature dirs for task mode, shared .autopilotagent/ for command mode ---
 if [[ "$MODE" == "task" ]]; then
     FEATURE_DIR=$(dirname "$TASKFILE")
     mkdir -p "$FEATURE_DIR"
     PID_FILE="$FEATURE_DIR/run.pid"
     STOP_SIGNAL_FILE="$FEATURE_DIR/stop-signal"
     LOOP_STATE_FILE="$FEATURE_DIR/loop-state.md"
-    export AUTOPILOT_STATE_DIR="$FEATURE_DIR"
+    export AUTOPILOTAGENT_STATE_DIR="$FEATURE_DIR"
 else
-    mkdir -p .autopilot
-    PID_FILE=".autopilot/command.pid"
-    STOP_SIGNAL_FILE=".autopilot/stop-signal"
-    LOOP_STATE_FILE=".autopilot/loop-state.md"
-    export AUTOPILOT_STATE_DIR=".autopilot"
+    mkdir -p .autopilotagent
+    PID_FILE=".autopilotagent/command.pid"
+    STOP_SIGNAL_FILE=".autopilotagent/stop-signal"
+    LOOP_STATE_FILE=".autopilotagent/loop-state.md"
+    export AUTOPILOTAGENT_STATE_DIR=".autopilotagent"
 fi
 
 # Check if another instance is running
 if [[ -f "$PID_FILE" ]]; then
     OLD_PID=$(cat "$PID_FILE")
     if kill -0 "$OLD_PID" 2>/dev/null; then
-        echo -e "${RED}Error: Another autopilot instance is running (PID $OLD_PID)${NC}"
-        echo -e "${YELLOW}Use '/autopilot stop' to stop it, or 'kill -USR1 $OLD_PID'${NC}"
+        echo -e "${RED}Error: Another autopilotagent instance is running (PID $OLD_PID)${NC}"
+        echo -e "${YELLOW}Use '/autopilotagent stop' to stop it, or 'kill -USR1 $OLD_PID'${NC}"
         exit 1
     else
         echo -e "${YELLOW}Removed stale PID file${NC}"
@@ -444,13 +444,13 @@ check_stop() {
     if [[ "$STOP_REQUESTED" == "true" ]]; then
         echo ""
         echo -e "${YELLOW}Stop signal received (SIGUSR1)${NC}"
-        echo -e "${YELLOW}Stopping autopilot loop...${NC}"
+        echo -e "${YELLOW}Stopping autopilotagent loop...${NC}"
         return 0
     fi
     if [[ -f "$STOP_SIGNAL_FILE" ]]; then
         echo ""
         echo -e "${GREEN}Stop signal received (sentinel file)${NC}"
-        echo -e "${GREEN}Autopilot requested exit.${NC}"
+        echo -e "${GREEN}Autopilotagent requested exit.${NC}"
         rm -f "$STOP_SIGNAL_FILE"
         return 0
     fi
@@ -510,7 +510,7 @@ print_status() {
 }
 
 # Build Claude CLI options (shared between modes)
-# --allowedTools: pre-approve all tools so autopilot runs without permission prompts
+# --allowedTools: pre-approve all tools so autopilotagent runs without permission prompts
 # Note: workspace trust prompt appears once per project directory (accept manually first time)
 CLAUDE_OPTS=(--allowedTools 'Bash(*)' Read Edit Write Glob Grep Task Skill NotebookEdit 'WebFetch(*)' WebSearch 'mcp__*')
 if [[ -n "$MODEL" ]]; then
@@ -520,29 +520,29 @@ fi
 CLAUDE_OPTS+=(--)
 
 build_task_prompt() {
-    local autopilot_cmd="$1"
+    local autopilotagent_cmd="$1"
 
     if [[ "$AGENT" == "claude" ]]; then
-        echo "$autopilot_cmd"
+        echo "$autopilotagent_cmd"
         return 0
     fi
 
     cat << EOF
-You are running Autopilot from $SCRIPT_DIR with agent "$AGENT".
+You are running Autopilotagent from $SCRIPT_DIR with agent "$AGENT".
 
 Read and follow these project command specs:
-- $SCRIPT_DIR/commands/autopilot.md
+- $SCRIPT_DIR/commands/autopilotagent.md
 - $SCRIPT_DIR/commands/tasks.md if task structure is unclear
 - $SCRIPT_DIR/AGENTS.md for operational guardrails
 
-Execute this Autopilot request as a non-interactive autonomous session:
-$autopilot_cmd
+Execute this Autopilotagent request as a non-interactive autonomous session:
+$autopilotagent_cmd
 
 Important:
 - Do not rely on slash-command registration. Treat the request above as an instruction to execute the matching command spec from $SCRIPT_DIR/commands.
 - Make reasonable choices without asking for user input.
 - Process only the requested batch size.
-- Update the task JSON, notes, git tags, commits, and analytics exactly as the Autopilot spec requires.
+- Update the task JSON, notes, git tags, commits, and analytics exactly as the Autopilotagent spec requires.
 - When the requested batch or command is genuinely complete, print COMPLETE and exit.
 EOF
 }
@@ -556,7 +556,7 @@ build_command_prompt() {
     fi
 
     cat << EOF
-You are running Autopilot command loop mode from $SCRIPT_DIR with agent "$AGENT".
+You are running Autopilotagent command loop mode from $SCRIPT_DIR with agent "$AGENT".
 
 Read and follow the command specs in $SCRIPT_DIR/commands for this request:
 $full_command
@@ -822,14 +822,14 @@ while true; do
     echo -e "${BLUE}=== Session $SESSION ===${NC}"
     print_status
 
-    # Build the autopilot command
-    AUTOPILOT_CMD="/autopilot $TASKFILE"
+    # Build the autopilotagent command
+    AUTOPILOTAGENT_CMD="/autopilotagent $TASKFILE"
     if [[ -n "$BATCH_SIZE" ]]; then
-        AUTOPILOT_CMD="$AUTOPILOT_CMD --batch $BATCH_SIZE"
+        AUTOPILOTAGENT_CMD="$AUTOPILOTAGENT_CMD --batch $BATCH_SIZE"
     fi
 
     if [[ "$DRY_RUN" == "true" ]]; then
-        AGENT_PROMPT=$(build_task_prompt "$AUTOPILOT_CMD")
+        AGENT_PROMPT=$(build_task_prompt "$AUTOPILOTAGENT_CMD")
         echo -e "${YELLOW}[DRY RUN] Would execute:${NC}"
         print_agent_command "$AGENT_PROMPT"
         echo ""
@@ -852,7 +852,7 @@ while true; do
         SESSION_START_EPOCH=$(date +%s)
 
         # Run the selected agent in background so we can monitor for batch completion.
-        AGENT_PROMPT=$(build_task_prompt "$AUTOPILOT_CMD")
+        AGENT_PROMPT=$(build_task_prompt "$AUTOPILOTAGENT_CMD")
         run_agent_background "$AGENT_PROMPT"
         AGENT_PID=$CURRENT_AGENT_PID
 
@@ -943,7 +943,7 @@ while true; do
         # --- Update analytics from ground truth ---
         if command -v jq &>/dev/null; then
             # Derive analytics directory from task file location
-            # e.g., "docs/autopilot/user-auth/user-auth.json" → "docs/autopilot/user-auth/analytics"
+            # e.g., "docs/autopilotagent/user-auth/user-auth.json" → "docs/autopilotagent/user-auth/analytics"
             TASKNAME_STEM=$(basename "$TASKFILE" .json | sed 's/\.md$//')
             ANALYTICS_DIR="$(dirname "$TASKFILE")/analytics"
 

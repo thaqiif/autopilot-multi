@@ -9,35 +9,35 @@ When using superpowers skills that save plans or documents:
 
 ## Project Overview
 
-Autopilot is a workflow toolkit for autonomous Test-Driven Development using Claude Code. It includes a built-in loop mechanism (stop-hook) that enables iterative execution without external dependencies. The typical workflow:
+Autopilotagent is a workflow toolkit for autonomous Test-Driven Development using Claude Code. It includes a built-in loop mechanism (stop-hook) that enables iterative execution without external dependencies. The typical workflow:
 
 1. `/prd feature-name` → Generate human-readable PRD via clarifying questions
 2. `/tasks prd-file.md` → Convert PRD to machine-readable JSON task file
-3. `/autopilot tasks.json` → Execute TDD cycles autonomously via built-in loop
+3. `/autopilotagent tasks.json` → Execute TDD cycles autonomously via built-in loop
 
 ## Architecture
 
 **Commands** (`commands/*.md`) are symlinked to `~/.claude/commands/` and become slash commands:
 - `prd.md` - Asks clarifying questions, outputs markdown PRD
 - `tasks.md` - Parses PRD, outputs JSON with TDD tracking fields
-- `autopilot.md` - Main entry point, dispatches to modes based on arguments
-- `init.md` - Project configuration wizard, creates `autopilot.json`
+- `autopilotagent.md` - Main entry point, dispatches to modes based on arguments
+- `init.md` - Project configuration wizard, creates `autopilotagent.json`
 - `analyze.md` - Post-session analytics analysis, generates improvement suggestions
 
 **Hooks** (`hooks/*.sh`) provide the loop mechanism:
 - `stop-hook.sh` - Intercepts exit attempts, re-feeds the prompt for iteration
-- Installed to `~/.claude/hooks/autopilot-stop-hook.sh`
+- Installed to `~/.claude/hooks/autopilotagent-stop-hook.sh`
 
 **Supporting Files**:
-- `autopilot.schema.json` - Validates `autopilot.json` structure
-- `autopilot.template.json` - Starting point with null values for init to populate
+- `autopilotagent.schema.json` - Validates `autopilotagent.json` structure
+- `autopilotagent.template.json` - Starting point with null values for init to populate
 - `AGENTS.md` - TDD guidelines, symlinked to `~/.claude/` for cross-project access
 - `run.sh` - Token-frugal bash wrapper for fresh sessions per requirement
 - `cleanup.sh` - Kills orphaned Claude Code processes (MCP servers, subagents, workers)
 
 **Generated in User Projects**:
-- `autopilot.json` - Feedback loops, iterations, project conventions
-- `docs/autopilot/<feature-name>/` - All files for a given run live in one directory:
+- `autopilotagent.json` - Feedback loops, iterations, project conventions
+- `docs/autopilotagent/<feature-name>/` - All files for a given run live in one directory:
   - `<feature-name>.md` - Human-readable PRD
   - `<feature-name>.json` - Machine-readable task file with TDD tracking
   - `<feature-name>-notes.md` - Progress logs for session continuity
@@ -45,9 +45,9 @@ Autopilot is a workflow toolkit for autonomous Test-Driven Development using Cla
 
 ## Key Concepts
 
-**Loop Mechanism**: The built-in stop-hook (`hooks/stop-hook.sh`) intercepts Claude's exit attempts and re-feeds the prompt for iteration. State is stored in `.autopilot/loop-state.md` with iteration count, max iterations, and completion promise. When Claude outputs COMPLETE or reaches max iterations, the loop exits.
+**Loop Mechanism**: The built-in stop-hook (`hooks/stop-hook.sh`) intercepts Claude's exit attempts and re-feeds the prompt for iteration. State is stored in `.autopilotagent/loop-state.md` with iteration count, max iterations, and completion promise. When Claude outputs COMPLETE or reaches max iterations, the loop exits.
 
-**Feedback Loops**: Commands run before each commit (typecheck, tests, lint). Configured in `autopilot.json`. Claude must not commit if any fail.
+**Feedback Loops**: Commands run before each commit (typecheck, tests, lint). Configured in `autopilotagent.json`. Claude must not commit if any fail.
 
 **TDD Phases**: Red (write failing test) → Green (minimal implementation) → Refactor (run code-simplifier). All three phases must complete before marking `passes: true`.
 
@@ -57,20 +57,20 @@ Autopilot is a workflow toolkit for autonomous Test-Driven Development using Cla
 
 **Code Simplifier**: The `code-simplifier` agent (via Task tool) runs during TDD refactor phase to improve clarity while preserving functionality.
 
-**Analytics**: Per-session analytics files track iterations, errors, and waste patterns. Stored in `docs/autopilot/<feature-name>/analytics/`. Use `/autopilot analyze` to generate improvement suggestions.
+**Analytics**: Per-session analytics files track iterations, errors, and waste patterns. Stored in `docs/autopilotagent/<feature-name>/analytics/`. Use `/autopilotagent analyze` to generate improvement suggestions.
 
 **Thrashing Detection**: If the same error appears N times consecutively (default: 3), the task is immediately marked stuck. This prevents wasting tokens on unsolvable problems.
 
 ## Analytics System
 
-Analytics help identify token waste and improvement opportunities across autopilot sessions.
+Analytics help identify token waste and improvement opportunities across autopilotagent sessions.
 
 **Files**:
 - `analytics.schema.json` - Schema for session analytics files
 - `commands/analyze.md` - Post-session analysis command
-- `docs/autopilot/<feature-name>/analytics/*.json` - Per-session analytics (in user projects)
+- `docs/autopilotagent/<feature-name>/analytics/*.json` - Per-session analytics (in user projects)
 
-**Configuration** in `autopilot.json`:
+**Configuration** in `autopilotagent.json`:
 ```json
 {
   "analytics": {
@@ -81,11 +81,11 @@ Analytics help identify token waste and improvement opportunities across autopil
 ```
 
 **Workflow**:
-1. Autopilot creates analytics file at session start
+1. Autopilotagent creates analytics file at session start
 2. Logs errors, iterations, and timing per requirement
 3. Detects thrashing (same error N times) and aborts early
-4. After session, run `/autopilot analyze` for suggestions
-5. Apply relevant learnings to AGENTS.md or autopilot.json
+4. After session, run `/autopilotagent analyze` for suggestions
+5. Apply relevant learnings to AGENTS.md or autopilotagent.json
 6. Delete analytics files after review
 
 **Waste Patterns Detected**:
@@ -111,19 +111,19 @@ Notes files maintain state between sessions:
 - [timestamp] Completed requirement N: description
 ```
 
-## Autopilot Modes
+## Autopilotagent Modes
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| init | `/autopilot init` | Detect project config, create `autopilot.json` |
-| stop | `/autopilot stop` | Signal run.sh wrapper to exit gracefully |
-| cancel | `/autopilot cancel` | Remove loop state file to cancel hook-based loop |
-| tasks | `/autopilot file.json` | TDD task completion from JSON file |
-| tests | `/autopilot tests [%]` | Increase test coverage to target |
-| lint | `/autopilot lint` | Fix lint errors one by one |
-| entropy | `/autopilot entropy` | Clean up code smells and dead code |
-| analyze | `/autopilot analyze` | Generate suggestions from session analytics |
-| command | `/autopilot /<command>` | Run any slash command in a loop with fresh sessions |
+| init | `/autopilotagent init` | Detect project config, create `autopilotagent.json` |
+| stop | `/autopilotagent stop` | Signal run.sh wrapper to exit gracefully |
+| cancel | `/autopilotagent cancel` | Remove loop state file to cancel hook-based loop |
+| tasks | `/autopilotagent file.json` | TDD task completion from JSON file |
+| tests | `/autopilotagent tests [%]` | Increase test coverage to target |
+| lint | `/autopilotagent lint` | Fix lint errors one by one |
+| entropy | `/autopilotagent entropy` | Clean up code smells and dead code |
+| analyze | `/autopilotagent analyze` | Generate suggestions from session analytics |
+| command | `/autopilotagent /<command>` | Run any slash command in a loop with fresh sessions |
 
 ### Command Loop Mode
 
@@ -134,9 +134,9 @@ Run any slash command repeatedly with fresh sessions:
 ./run.sh /my-command --max 5           # Run /my-command 5 times
 ./run.sh /review-pr 123 --max 3        # Run /review-pr with arg, 3 times
 
-# Via /autopilot directly (single session)
-/autopilot /my-command --max 5         # Run in loop within session
-/autopilot /gather-resources --max 100 # Run 100 times
+# Via /autopilotagent directly (single session)
+/autopilotagent /my-command --max 5         # Run in loop within session
+/autopilotagent /gather-resources --max 100 # Run 100 times
 ```
 
 **Note:** Use `--max N` to specify iterations. Without it, defaults to 10.
@@ -152,7 +152,7 @@ This repo has no build system or tests - it's pure markdown documentation. Chang
 
 **Installation**: `./install.sh` creates symlinks to `~/.claude/commands/`, `~/.claude/hooks/`, and `~/.claude/AGENTS.md`
 
-**Uninstall**: `rm ~/.claude/commands/{prd,tasks,autopilot,init,analyze}.md ~/.claude/AGENTS.md ~/.claude/hooks/autopilot-stop-hook.sh ~/.local/bin/autopilot ~/.local/bin/autopilot-cleanup`
+**Uninstall**: `rm ~/.claude/commands/{prd,tasks,autopilotagent,init,analyze}.md ~/.claude/AGENTS.md ~/.claude/hooks/autopilotagent-stop-hook.sh ~/.local/bin/autopilotagent ~/.local/bin/autopilotagent-cleanup`
 
 ## Process Management
 
@@ -160,8 +160,8 @@ Claude Code spawns child processes (MCP servers, subagents, bun workers) that ca
 
 - **`kill_session()`** - Collects all descendant PIDs before killing the parent, then SIGTERMs the entire tree. Force-kills survivors after 5 seconds.
 - **EXIT trap** - Ensures cleanup runs on any exit (normal, Ctrl+C, SIGTERM).
-- **`--cleanup` flag** - Kills stale background processes before starting: `autopilot --cleanup tasks.json`
-- **`cleanup.sh`** - Standalone cleanup: `autopilot-cleanup` (background orphans) or `autopilot-cleanup --all` (everything).
+- **`--cleanup` flag** - Kills stale background processes before starting: `autopilotagent --cleanup tasks.json`
+- **`cleanup.sh`** - Standalone cleanup: `autopilotagent-cleanup` (background orphans) or `autopilotagent-cleanup --all` (everything).
 
 ## Commit Guidelines
 
@@ -222,7 +222,7 @@ Use parallel subagents for exploration, sequential for execution.
 
 ## JSON Schema
 
-`autopilot.schema.json` validates `autopilot.json`. Key required fields:
+`autopilotagent.schema.json` validates `autopilotagent.json`. Key required fields:
 - `project.type` - Language/framework (nodejs, python, go, etc.)
 - `feedbackLoops.tests.command` - Test command (unless `enabled: false`)
 - `feedbackLoops.lint.command` - Lint command (unless `enabled: false`)

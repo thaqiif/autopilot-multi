@@ -66,7 +66,7 @@ printf '%s\n' "\$0 \$*" >> "$target_file"
 case "$behavior" in
     complete_one)
         prompt="\${*: -1}"
-        taskfile=\$(printf '%s\n' "\$prompt" | sed -n 's|^/autopilot \([^ ]*\.json\).*|\1|p' | head -1)
+        taskfile=\$(printf '%s\n' "\$prompt" | sed -n 's|^/autopilotagent \([^ ]*\.json\).*|\1|p' | head -1)
         if [[ -n "\$taskfile" && -f "\$taskfile" ]]; then
             tmp="\${taskfile}.tmp"
             jq '([.requirements | to_entries[] | select(.value.passes != true and .value.stuck != true and .value.invalidTest != true) | .key][0]) as \$i | .requirements[\$i].passes = true' "\$taskfile" > "\$tmp"
@@ -76,7 +76,7 @@ case "$behavior" in
         ;;
     invalid_one)
         prompt="\${*: -1}"
-        taskfile=\$(printf '%s\n' "\$prompt" | sed -n 's|^/autopilot \([^ ]*\.json\).*|\1|p' | head -1)
+        taskfile=\$(printf '%s\n' "\$prompt" | sed -n 's|^/autopilotagent \([^ ]*\.json\).*|\1|p' | head -1)
         if [[ -n "\$taskfile" && -f "\$taskfile" ]]; then
             tmp="\${taskfile}.tmp"
             jq '([.requirements | to_entries[] | select(.value.passes != true and .value.stuck != true and .value.invalidTest != true) | .key][0]) as \$i | .requirements[\$i].invalidTest = true' "\$taskfile" > "\$tmp"
@@ -199,10 +199,10 @@ OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent cmd --dry-run 2>&1)
 EXIT_CODE=$?
 test_it "--agent cmd: uses command code headless mode" 'output_contains "Agent: cmd" && output_contains "cmd -p" && output_contains "--yolo"'
 
-# Test: AUTOPILOT_AGENT env var is honored
-OUTPUT=$(AUTOPILOT_AGENT=codex ./run.sh tests/fixtures/incomplete.json --dry-run 2>&1)
+# Test: AUTOPILOTAGENT_AGENT env var is honored
+OUTPUT=$(AUTOPILOTAGENT_AGENT=codex ./run.sh tests/fixtures/incomplete.json --dry-run 2>&1)
 EXIT_CODE=$?
-test_it "AUTOPILOT_AGENT: sets default agent" 'output_contains "Agent: codex" && output_contains "codex exec --sandbox workspace-write"'
+test_it "AUTOPILOTAGENT_AGENT: sets default agent" 'output_contains "Agent: codex" && output_contains "codex exec --sandbox workspace-write"'
 
 # Test: unknown agent shows error
 OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent nope --dry-run 2>&1)

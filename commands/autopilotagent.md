@@ -1,4 +1,4 @@
-# Autopilot
+# Autopilotagent
 
 Start an autonomous work session with progress tracking and learnings.
 
@@ -12,17 +12,17 @@ This prompt is structured in phases:
 ## Usage
 
 ```
-/autopilot init                             # Initialize project configuration
-/autopilot stop                             # Stop run.sh loop gracefully
-/autopilot cancel                           # Cancel hook-based loop
-/autopilot <file.json> [max-iterations]    # TDD task completion mode (default)
-/autopilot tests [target%] [max-iterations] # Test coverage mode
-/autopilot lint [max-iterations]            # Linting mode
-/autopilot entropy [max-iterations]         # Code cleanup mode
-/autopilot /<command> [args] [--max N]      # Run slash command in loop
+/autopilotagent init                             # Initialize project configuration
+/autopilotagent stop                             # Stop run.sh loop gracefully
+/autopilotagent cancel                           # Cancel hook-based loop
+/autopilotagent <file.json> [max-iterations]    # TDD task completion mode (default)
+/autopilotagent tests [target%] [max-iterations] # Test coverage mode
+/autopilotagent lint [max-iterations]            # Linting mode
+/autopilotagent entropy [max-iterations]         # Code cleanup mode
+/autopilotagent /<command> [args] [--max N]      # Run slash command in loop
 ```
 
-Default max-iterations are configured in `autopilot.json` (tasks: 15, tests: 10, lint: 15, entropy: 10, command: 10). Pass a number to override. Lower defaults optimize for token frugality - restart sessions frequently for fresh context.
+Default max-iterations are configured in `autopilotagent.json` (tasks: 15, tests: 10, lint: 15, entropy: 10, command: 10). Pass a number to override. Lower defaults optimize for token frugality - restart sessions frequently for fresh context.
 
 **Iteration Expectations:**
 | Mode | Default | Per Item | Typical Session |
@@ -39,15 +39,15 @@ For larger task files, increase iterations or use `--start-from` to resume acros
 
 ### 0a. Configuration Check
 
-**Before executing any mode, check for `autopilot.json` in the project root.**
+**Before executing any mode, check for `autopilotagent.json` in the project root.**
 
-### If `autopilot.json` does not exist:
+### If `autopilotagent.json` does not exist:
 
 Tell the user:
 ```
-Autopilot is not configured for this project.
+Autopilotagent is not configured for this project.
 
-Run /autopilot init to set up autopilot with:
+Run /autopilotagent init to set up autopilotagent with:
 - Feedback loop detection (tests, lint, typecheck)
 - Project type and conventions
 - Iteration limits per mode
@@ -55,12 +55,12 @@ Run /autopilot init to set up autopilot with:
 
 This only needs to be done once per project.
 
-Quick setup: /autopilot init --force (uses auto-detected values)
+Quick setup: /autopilotagent init --force (uses auto-detected values)
 ```
 
 Then stop execution. Do not proceed without configuration.
 
-### If `autopilot.json` exists but has null required values:
+### If `autopilotagent.json` exists but has null required values:
 
 Check these required fields:
 - `project.type` - must not be null
@@ -69,14 +69,14 @@ Check these required fields:
 
 If any required fields are null, tell the user:
 ```
-Autopilot configuration is incomplete.
+Autopilotagent configuration is incomplete.
 
 Missing fields:
 - <list missing fields with descriptions>
 
 How to fix:
-1. Run /autopilot init to re-detect and fill missing values
-2. Or manually edit autopilot.json:
+1. Run /autopilotagent init to re-detect and fill missing values
+2. Or manually edit autopilotagent.json:
    - project.type: Your project language (nodejs, python, go, etc.)
    - feedbackLoops.tests.command: Command to run tests (e.g., "npm test")
    - feedbackLoops.lint.command: Command to run linter (e.g., "npm run lint")
@@ -86,7 +86,7 @@ If you don't have tests or linting, set enabled: false for that feedback loop.
 
 Then stop execution.
 
-### If `autopilot.json` is valid:
+### If `autopilotagent.json` is valid:
 
 Read the configuration and use:
 - `iterations.tasks`, `iterations.tests`, `iterations.lint`, `iterations.entropy` as default max iterations
@@ -97,47 +97,47 @@ Proceed to argument parsing and mode execution.
 
 ### 0b. Parallel Agent Awareness
 
-Check for other running autopilot instances:
+Check for other running autopilotagent instances:
 
 ```bash
-ls docs/autopilot/*/run.pid 2>/dev/null
+ls docs/autopilotagent/*/run.pid 2>/dev/null
 ```
 
 If other `run.pid` files exist (besides your own feature's):
 - **Always use `git add <specific-files>`** — never `git add -A` or `git add .`, as other agents may have staged their own changes simultaneously.
-- **Use `hooks/git-commit` instead of `git commit`** to serialize commits and prevent staging-area races. Find it at `~/.claude/hooks/git-commit` or `hooks/git-commit` relative to the autopilot repo root.
+- **Use `hooks/git-commit` instead of `git commit`** to serialize commits and prevent staging-area races. Find it at `~/.claude/hooks/git-commit` or `hooks/git-commit` relative to the autopilotagent repo root.
 - **Before modifying a shared file**, check if another agent recently touched it: `git log --oneline -5 -- <file>`. If so, read the current file state before editing to avoid clobbering their work.
 
 ### 0c. Argument Parsing
 
 Parse `$ARGUMENTS` to extract:
 1. **Mode** - Determined by first argument (`init`, file path, `tests`, `lint`, `entropy`, or `/<command>`)
-2. **Max iterations** - Optional trailing number (defaults from autopilot.json)
+2. **Max iterations** - Optional trailing number (defaults from autopilotagent.json)
 3. **Mode-specific params** - Target percentage for tests mode, file path for TDD mode, command name for command mode
 4. **--start-from ID** - Optional flag to resume from a specific requirement ID (TDD mode only)
 5. **--batch N** - Complete N requirements then stop (TDD mode only, default: all)
 
 Examples:
-- `/autopilot init` → Run initialization wizard
-- `/autopilot init --force` → Run initialization with auto-detected values
-- `/autopilot tasks.json` → TDD mode, iterations from config (default: 15)
-- `/autopilot tasks.json 30` → TDD mode, 30 iterations
-- `/autopilot tasks.json --start-from 5` → TDD mode, skip requirements before ID 5
-- `/autopilot tasks.json --start-from 5 30` → TDD mode, start from 5, 30 iterations
-- `/autopilot tasks.json --batch 1` → TDD mode, complete 1 requirement then stop
-- `/autopilot tasks.json --batch 3` → TDD mode, complete up to 3 requirements then stop
-- `/autopilot tests 80` → Test mode, 80% target, iterations from config (default: 10)
-- `/autopilot tests 80 15` → Test mode, 80% target, 15 iterations
-- `/autopilot lint 10` → Lint mode, 10 iterations
-- `/autopilot /my-command` → Command mode, run /my-command 10 times (default)
-- `/autopilot /my-command --max 5` → Command mode, run /my-command 5 times
-- `/autopilot /my-command arg1 --max 5` → Command mode with args, 5 times
+- `/autopilotagent init` → Run initialization wizard
+- `/autopilotagent init --force` → Run initialization with auto-detected values
+- `/autopilotagent tasks.json` → TDD mode, iterations from config (default: 15)
+- `/autopilotagent tasks.json 30` → TDD mode, 30 iterations
+- `/autopilotagent tasks.json --start-from 5` → TDD mode, skip requirements before ID 5
+- `/autopilotagent tasks.json --start-from 5 30` → TDD mode, start from 5, 30 iterations
+- `/autopilotagent tasks.json --batch 1` → TDD mode, complete 1 requirement then stop
+- `/autopilotagent tasks.json --batch 3` → TDD mode, complete up to 3 requirements then stop
+- `/autopilotagent tests 80` → Test mode, 80% target, iterations from config (default: 10)
+- `/autopilotagent tests 80 15` → Test mode, 80% target, 15 iterations
+- `/autopilotagent lint 10` → Lint mode, 10 iterations
+- `/autopilotagent /my-command` → Command mode, run /my-command 10 times (default)
+- `/autopilotagent /my-command --max 5` → Command mode, run /my-command 5 times
+- `/autopilotagent /my-command arg1 --max 5` → Command mode with args, 5 times
 
 ### 0c. Mode Detection
 
 Based on the argument ($ARGUMENTS), determine the mode:
 
-1. **If argument is `init`** → Run `/autopilot init` command (invoke the init.md command)
+1. **If argument is `init`** → Run `/autopilotagent init` command (invoke the init.md command)
 2. **If argument is `stop`** → Stop mode (signal run.sh to exit)
 3. **If argument is `cancel`** → Cancel mode (remove loop state file)
 4. **If argument ends with `.json` or `.md`** → TDD task completion mode
@@ -151,17 +151,17 @@ Based on the argument ($ARGUMENTS), determine the mode:
 
 ### 0d. Analytics Initialization
 
-If analytics are enabled in `autopilot.json` (default: true), initialize session analytics before running any mode that uses iterations (tasks, tests, lint, entropy).
+If analytics are enabled in `autopilotagent.json` (default: true), initialize session analytics before running any mode that uses iterations (tasks, tests, lint, entropy).
 
 **Steps:**
 
-1. **Read analytics config** from `autopilot.json`:
+1. **Read analytics config** from `autopilotagent.json`:
    - `analytics.enabled` (default: true)
    - `analytics.thrashingThreshold` (default: 3)
 
 2. **Determine analytics directory** based on the run:
-   - For task mode: `docs/autopilot/<feature-name>/analytics/` (same dir as the task file)
-   - For standalone modes (tests, lint, entropy): `docs/autopilot/<mode-name>/analytics/`
+   - For task mode: `docs/autopilotagent/<feature-name>/analytics/` (same dir as the task file)
+   - For standalone modes (tests, lint, entropy): `docs/autopilotagent/<mode-name>/analytics/`
    - Create the directory if it doesn't exist
 
 3. **Generate session file name**: `YYYY-MM-DD-TASKNAME-N.json`
@@ -172,7 +172,7 @@ If analytics are enabled in `autopilot.json` (default: true), initialize session
 4. **Initialize analytics file** with base structure:
    ```json
    {
-     "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/analytics.schema.json",
+     "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/analytics.schema.json",
      "sessionId": "<timestamp-based-id>",
      "startedAt": "<ISO8601>",
      "completedAt": null,
@@ -193,11 +193,11 @@ If analytics are enabled in `autopilot.json` (default: true), initialize session
 
 Determine the state directory by running:
 ```bash
-bash -c 'echo "${AUTOPILOT_STATE_DIR:-.autopilot}"'
+bash -c 'echo "${AUTOPILOTAGENT_STATE_DIR:-.autopilotagent}"'
 ```
 Store the result as **STATE_DIR**. Create it if needed: `mkdir -p STATE_DIR`.
 
-Use STATE_DIR for **all** loop-state.md and stop-signal file operations throughout this session. Do not hardcode `.autopilot/` for these files.
+Use STATE_DIR for **all** loop-state.md and stop-signal file operations throughout this session. Do not hardcode `.autopilotagent/` for these files.
 
 ---
 
@@ -205,7 +205,7 @@ Use STATE_DIR for **all** loop-state.md and stop-signal file operations througho
 
 ### Mode: Init
 
-For `init` argument, invoke the `/autopilot init` command to run the initialization wizard.
+For `init` argument, invoke the `/autopilotagent init` command to run the initialization wizard.
 
 Pass any additional arguments (like `--force`, `--skip-validation`) to the init command.
 
@@ -213,16 +213,16 @@ Pass any additional arguments (like `--force`, `--skip-validation`) to the init 
 
 For `stop` argument. Signals the run.sh loop to exit gracefully.
 
-**Do not check for autopilot.json** - this mode should work regardless of configuration.
+**Do not check for autopilotagent.json** - this mode should work regardless of configuration.
 
 Steps:
-1. Find running autopilot PID files:
-   - If `AUTOPILOT_STATE_DIR` is set in env: check `$AUTOPILOT_STATE_DIR/run.pid`
-   - Also search: `ls docs/autopilot/*/run.pid .autopilot/command.pid 2>/dev/null`
+1. Find running autopilotagent PID files:
+   - If `AUTOPILOTAGENT_STATE_DIR` is set in env: check `$AUTOPILOTAGENT_STATE_DIR/run.pid`
+   - Also search: `ls docs/autopilotagent/*/run.pid .autopilotagent/command.pid 2>/dev/null`
    - Collect all found PID files
 2. If no PID files found, tell the user:
    ```
-   No autopilot session is running.
+   No autopilotagent session is running.
    ```
 3. For each PID file found:
    - Read the PID
@@ -234,23 +234,23 @@ Steps:
 
 For `cancel` argument. Cancels an active hook-based loop by removing the state file.
 
-**Do not check for autopilot.json** - this mode should work regardless of configuration.
+**Do not check for autopilotagent.json** - this mode should work regardless of configuration.
 
 Steps:
 1. Check if `$STATE_DIR/loop-state.md` exists
 2. If it does not exist, tell the user:
    ```
-   No active autopilot loop found.
+   No active autopilotagent loop found.
 
    If you're trying to stop the run.sh wrapper, use:
-     /autopilot stop
+     /autopilotagent stop
    Or press Ctrl+C in the terminal running the wrapper.
    ```
 3. If it exists, read the current iteration from the YAML frontmatter
 4. Delete the file: `rm $STATE_DIR/loop-state.md`
 5. Tell the user:
    ```
-   Autopilot loop canceled at iteration N.
+   Autopilotagent loop canceled at iteration N.
 
    The loop will exit on the next iteration attempt.
    Note: Any work in progress will complete before the loop stops.
@@ -260,7 +260,7 @@ Steps:
 
 For file paths (`.json` or `.md` files). Uses Test-Driven Development.
 
-Read `autopilot.json` to get:
+Read `autopilotagent.json` to get:
 - `TYPECHECK_CMD` from `feedbackLoops.typecheck.command` (if enabled)
 - `TEST_CMD` from `feedbackLoops.tests.command`
 - `LINT_CMD` from `feedbackLoops.lint.command`
@@ -271,7 +271,7 @@ Check for `--batch N` flag. If present, extract the BATCH_COUNT (default: 0 mean
 
 ### Branch Setup
 
-Derive the feature name from the task file path by taking the basename and stripping the extension (e.g. `docs/autopilot/my-feature/my-feature.json` → `my-feature`).
+Derive the feature name from the task file path by taking the basename and stripping the extension (e.g. `docs/autopilotagent/my-feature/my-feature.json` → `my-feature`).
 
 Create or switch to the feature branch:
 ```bash
@@ -308,7 +308,7 @@ Also skip requirements with dependsOn where any dependency has passes false.
 ANALYTICS_INSTRUCTION
 
 Process ONE requirement at a time. Pick the next workable incomplete requirement (lowest id first) then:
-1. Create git tag: run `git tag -f autopilot/req-ID/start` for THIS requirement ONLY — the `-f` flag overwrites any existing tag from a prior attempt. Do NOT create tags for any other requirements
+1. Create git tag: run `git tag -f autopilotagent/req-ID/start` for THIS requirement ONLY — the `-f` flag overwrites any existing tag from a prior attempt. Do NOT create tags for any other requirements
 2. Track files you modify
 3. If requirement has a package field then use that package feedback loop commands from workspaces config
 4. If requirement has an issue field then append issue reference to commit messages
@@ -326,7 +326,7 @@ Run feedback loops before committing. Do NOT commit if any fail.
 
 THRASHING_INSTRUCTION
 
-If same task fails 3 iterations then add stuck true with blockedReason and ADD A LEARNING to AGENTS.md under the appropriate category explaining what blocked you and note that rollback is available with /autopilot rollback ID and log blocker to notes and skip to next.
+If same task fails 3 iterations then add stuck true with blockedReason and ADD A LEARNING to AGENTS.md under the appropriate category explaining what blocked you and note that rollback is available with /autopilotagent rollback ID and log blocker to notes and skip to next.
 
 Update TASKFILE-notes.md after each requirement with Current State section and list files modified for this requirement.
 
@@ -337,10 +337,10 @@ STOP_SIGNAL_INSTRUCTION
 
 Replace:
 - ANALYTICS_INSTRUCTION with `If analytics enabled and you encounter errors during TDD phases then append them to the requirement errors array in ANALYTICS_FILE with fields: attempt (number) and phase (red/green/refactor) and type (test_failure/connection_error/build_error/etc) and message (error text) and command (what was run) and resolution (how you fixed it or null if stuck). Infrastructure handles all other analytics fields automatically.` if analytics are enabled, otherwise remove it
-- THRASHING_INSTRUCTION with `Track consecutive identical errors. If the same error pattern appears THRASHING_THRESHOLD times in a row then immediately mark stuck with blockedReason containing Thrashing detected and the error pattern and set thrashing.detected true in analytics.` where THRASHING_THRESHOLD comes from autopilot.json analytics.thrashingThreshold (default: 3)
+- THRASHING_INSTRUCTION with `Track consecutive identical errors. If the same error pattern appears THRASHING_THRESHOLD times in a row then immediately mark stuck with blockedReason containing Thrashing detected and the error pattern and set thrashing.detected true in analytics.` where THRASHING_THRESHOLD comes from autopilotagent.json analytics.thrashingThreshold (default: 3)
 - TASKFILE with the provided file path
 - MAXITER with the provided number or default from `iterations.tasks`
-- TYPECHECK_CMD, TEST_CMD, LINT_CMD with commands from autopilot.json (omit if disabled)
+- TYPECHECK_CMD, TEST_CMD, LINT_CMD with commands from autopilotagent.json (omit if disabled)
 - START_FROM_INSTRUCTION with `Skip requirements with id less than START_ID.` if --start-from was specified, otherwise remove it
 - BATCH_INSTRUCTION with `Stop after completing BATCH_COUNT requirements and output COMPLETE.` if --batch was specified, otherwise remove it
 - COMPLETION_INSTRUCTION with `Output COMPLETE after completing BATCH_COUNT requirements.` if --batch was specified, otherwise `Output COMPLETE when all requirements pass or all remaining are stuck or invalid or blocked by dependencies.`
@@ -356,11 +356,11 @@ After creating the loop state file, execute the TDD cycle directly. The stop-hoo
 
 For `rollback <requirement-id>` arguments. Rolls back to the state before a specific requirement was started.
 
-Usage: `/autopilot rollback 5` - rolls back to before requirement 5 was started
+Usage: `/autopilotagent rollback 5` - rolls back to before requirement 5 was started
 
 Steps:
-1. Find the git tag `autopilot/req-{id}/start` for the specified requirement
-2. If tag exists, run `git reset --hard autopilot/req-{id}/start`
+1. Find the git tag `autopilotagent/req-{id}/start` for the specified requirement
+2. If tag exists, run `git reset --hard autopilotagent/req-{id}/start`
 3. Delete any tags created after this point
 4. Update the task JSON to reset the requirement and any subsequent requirements to `passes: false`
 
@@ -368,14 +368,14 @@ Steps:
 
 ## Mode: Metrics
 
-For `metrics` argument. Generates an aggregated metrics report across all autopilot sessions.
+For `metrics` argument. Generates an aggregated metrics report across all autopilotagent sessions.
 
-**Note:** This is an alias for `/autopilot analyze` with aggregation focus. Both commands read the same analytics data.
+**Note:** This is an alias for `/autopilotagent analyze` with aggregation focus. Both commands read the same analytics data.
 
 Usage:
 ```
-/autopilot metrics                    # Show aggregated metrics across all sessions
-/autopilot metrics --since 30d        # Metrics from last 30 days
+/autopilotagent metrics                    # Show aggregated metrics across all sessions
+/autopilotagent metrics --since 30d        # Metrics from last 30 days
 ```
 
 Redirect to analyze mode with appropriate messaging:
@@ -389,15 +389,15 @@ For `analyze` argument. Reads session analytics files and generates improvement 
 
 Usage:
 ```
-/autopilot analyze                    # Analyze all sessions in analytics directory
-/autopilot analyze --last             # Analyze only the most recent session
-/autopilot analyze --since 7d         # Analyze sessions from last 7 days
-/autopilot analyze --task user-auth   # Analyze sessions for specific task
+/autopilotagent analyze                    # Analyze all sessions in analytics directory
+/autopilotagent analyze --last             # Analyze only the most recent session
+/autopilotagent analyze --since 7d         # Analyze sessions from last 7 days
+/autopilotagent analyze --task user-auth   # Analyze sessions for specific task
 ```
 
 ### Analysis Steps
 
-1. **Read analytics directory** — scan all `docs/autopilot/*/analytics/` directories for session files
+1. **Read analytics directory** — scan all `docs/autopilotagent/*/analytics/` directories for session files
 
 2. **Load session files** matching the filter criteria
 
@@ -417,7 +417,7 @@ Usage:
 5. **Generate suggestions** (output to console, not auto-applied):
 
 ```markdown
-# Autopilot Analysis Report
+# Autopilotagent Analysis Report
 
 Generated: 2026-01-10T15:30:00Z
 Sessions analyzed: 5
@@ -438,10 +438,10 @@ Based on 145 iterations across 5 sessions:
 **Suggested AGENTS.md entry**:
 ```
 ### Gotchas
-- 2026-01-10: Database tests require sandbox: false. If you see ECONNREFUSED localhost:5432, check autopilot.json feedbackLoops.tests.sandbox setting before retrying.
+- 2026-01-10: Database tests require sandbox: false. If you see ECONNREFUSED localhost:5432, check autopilotagent.json feedbackLoops.tests.sandbox setting before retrying.
 ```
 
-**Suggested autopilot.json change**:
+**Suggested autopilotagent.json change**:
 ```json
 "feedbackLoops": {
   "tests": {
@@ -489,37 +489,37 @@ Based on 145 iterations across 5 sessions:
 
 Review these suggestions and:
 1. Apply relevant changes to AGENTS.md
-2. Update autopilot.json if needed
+2. Update autopilotagent.json if needed
 3. Delete this analytics file after applying learnings
 
-Run `/autopilot analyze --clear` to delete all processed analytics files.
+Run `/autopilotagent analyze --clear` to delete all processed analytics files.
 ```
 
 ### Analysis Output
 
-The analysis is printed to console as markdown for easy reading. Suggestions are NOT automatically applied - you review and apply them manually to maintain control over the autopilot configuration.
+The analysis is printed to console as markdown for easy reading. Suggestions are NOT automatically applied - you review and apply them manually to maintain control over the autopilotagent configuration.
 
 After reviewing and applying suggestions, delete the analytics files:
 ```bash
-rm docs/autopilot/<feature-or-mode>/analytics/*.json
+rm docs/autopilotagent/<feature-or-mode>/analytics/*.json
 ```
 
-Or use `/autopilot analyze --clear` to delete all analytics files after reviewing.
+Or use `/autopilotagent analyze --clear` to delete all analytics files after reviewing.
 
 ## Mode: Command
 
 For arguments starting with `/` (slash commands). Runs a slash command in a loop with fresh sessions.
 
-Read `autopilot.json` to get:
+Read `autopilotagent.json` to get:
 - `MAXITER` default from `iterations.command` (usually 10)
 
-**Do not check for autopilot.json** - this mode should work regardless of configuration. If no config exists, use default of 10 iterations.
+**Do not check for autopilotagent.json** - this mode should work regardless of configuration. If no config exists, use default of 10 iterations.
 
 Usage:
 ```
-/autopilot /my-command                    # Run /my-command 10 times (default)
-/autopilot /my-command --max 5            # Run /my-command 5 times
-/autopilot /my-command arg1 arg2 --max 5  # Run with args, 5 times
+/autopilotagent /my-command                    # Run /my-command 10 times (default)
+/autopilotagent /my-command --max 5            # Run /my-command 5 times
+/autopilotagent /my-command arg1 arg2 --max 5  # Run with args, 5 times
 ```
 
 **Argument parsing for command mode:**
@@ -565,7 +565,7 @@ After creating the loop state file, execute the slash command directly. Output C
 
 For `tests` or `tests <target%>` arguments.
 
-Read `autopilot.json` to get:
+Read `autopilotagent.json` to get:
 - `TEST_CMD` from `feedbackLoops.tests.command`
 - `MAXITER` default from `iterations.tests` (usually 10)
 - Coverage targeting options from `coverage` config
@@ -583,7 +583,7 @@ completion_promise: COMPLETE
 
 Increase test coverage to TARGET percent minimum.
 
-Read docs/autopilot/test-coverage/YYYY-MM-DD-notes.md if it exists or create it with initial state template (use today's date).
+Read docs/autopilotagent/test-coverage/YYYY-MM-DD-notes.md if it exists or create it with initial state template (use today's date).
 
 Run coverage report.
 
@@ -611,7 +611,7 @@ Output COMPLETE when target reached or stuck.
 Replace:
 - TARGET with the provided percentage (default: 80)
 - MAXITER with the provided number or default from `iterations.tests`
-- TEST_CMD with command from autopilot.json
+- TEST_CMD with command from autopilotagent.json
 
 ### Execution
 
@@ -621,7 +621,7 @@ After creating the loop state file, execute the coverage improvement cycle direc
 
 For `lint` argument.
 
-Read `autopilot.json` to get:
+Read `autopilotagent.json` to get:
 - `LINT_CMD` from `feedbackLoops.lint.command`
 - `MAXITER` default from `iterations.lint` (usually 15)
 
@@ -638,7 +638,7 @@ completion_promise: COMPLETE
 
 Fix lint errors one at a time.
 
-Read docs/autopilot/lint-fixes/YYYY-MM-DD-notes.md if it exists or create it with initial state template (use today's date).
+Read docs/autopilotagent/lint-fixes/YYYY-MM-DD-notes.md if it exists or create it with initial state template (use today's date).
 
 Run LINT_CMD.
 
@@ -657,7 +657,7 @@ Output COMPLETE when no errors remain or only stuck errors.
 
 Replace:
 - MAXITER with the provided number or default from `iterations.lint`
-- LINT_CMD with command from autopilot.json
+- LINT_CMD with command from autopilotagent.json
 
 ### Execution
 
@@ -667,7 +667,7 @@ After creating the loop state file, execute the lint fix cycle directly. The sto
 
 For `entropy` argument.
 
-Read `autopilot.json` to get:
+Read `autopilotagent.json` to get:
 - `TYPECHECK_CMD` from `feedbackLoops.typecheck.command` (if enabled)
 - `TEST_CMD` from `feedbackLoops.tests.command`
 - `LINT_CMD` from `feedbackLoops.lint.command`
@@ -686,7 +686,7 @@ completion_promise: COMPLETE
 
 Clean up code entropy.
 
-Read docs/autopilot/entropy-cleanup/YYYY-MM-DD-notes.md if it exists or create it with initial state template (use today's date).
+Read docs/autopilotagent/entropy-cleanup/YYYY-MM-DD-notes.md if it exists or create it with initial state template (use today's date).
 
 Run code-simplifier on recent files.
 
@@ -712,7 +712,7 @@ Output COMPLETE when no smells remain or only stuck issues.
 
 Replace:
 - MAXITER with the provided number or default from `iterations.entropy`
-- TYPECHECK_CMD, TEST_CMD, LINT_CMD with commands from autopilot.json (omit if disabled)
+- TYPECHECK_CMD, TEST_CMD, LINT_CMD with commands from autopilotagent.json (omit if disabled)
 
 ### Execution
 
@@ -727,7 +727,7 @@ All modes include stuck handling to prevent infinite loops on intractable proble
 3. **Recovery**: Mark as stuck, skip to next task, continue working
 4. **Completion**: Output COMPLETE when done or only stuck items remain
 
-This ensures autopilot makes progress even when some tasks are blocked.
+This ensures autopilotagent makes progress even when some tasks are blocked.
 
 ## Thrashing Detection
 
@@ -779,12 +779,12 @@ Thrashing aborts faster because retrying the identical action is definitionally 
 
 ## Completion Summary
 
-When autopilot finishes - whether all requirements pass or session ends - generate a completion summary. Save it to `TASKFILE-summary.md` alongside the notes file.
+When autopilotagent finishes - whether all requirements pass or session ends - generate a completion summary. Save it to `TASKFILE-summary.md` alongside the notes file.
 
 **Summary format:**
 
 ```markdown
-# Autopilot Session Summary
+# Autopilotagent Session Summary
 
 ## Results
 - Completed: X requirements
@@ -808,7 +808,7 @@ When autopilot finishes - whether all requirements pass or session ends - genera
 - path/to/file2.ts
 
 ## Next Steps
-- Resume with: /autopilot TASKFILE --start-from X
+- Resume with: /autopilotagent TASKFILE --start-from X
 - Review stuck items and update requirements if needed
 ```
 
@@ -819,7 +819,7 @@ The summary provides:
 
 ## Monorepo and Workspace Support
 
-Autopilot supports monorepos with multiple packages. Configure workspaces in autopilot.json:
+Autopilotagent supports monorepos with multiple packages. Configure workspaces in autopilotagent.json:
 
 ```json
 {
@@ -864,7 +864,7 @@ When a requirement specifies a package:
 
 **Auto-detection:**
 
-Autopilot can detect monorepo structures during `/autopilot init`:
+Autopilotagent can detect monorepo structures during `/autopilotagent init`:
 - npm/yarn/pnpm workspaces via package.json
 - Lerna via lerna.json
 - Nx via nx.json
@@ -872,7 +872,7 @@ Autopilot can detect monorepo structures during `/autopilot init`:
 
 ## Issue Tracker Integration
 
-Autopilot can link work to GitHub Issues or other trackers. Configure in autopilot.json:
+Autopilotagent can link work to GitHub Issues or other trackers. Configure in autopilotagent.json:
 
 ```json
 {
@@ -900,12 +900,12 @@ In your task JSON, add an `issue` field to requirements:
 
 **Commit message linking:**
 
-When `linkCommits: true`, autopilot will append issue references to commit messages:
+When `linkCommits: true`, autopilotagent will append issue references to commit messages:
 - `feat: Add login form (#123)`
 
 **Issue updates:**
 
-When `updateOnComplete: true`, autopilot will comment on the issue when the requirement passes:
+When `updateOnComplete: true`, autopilotagent will comment on the issue when the requirement passes:
 - Adds a comment summarizing the commits
 - Changes label from `labelOnStart` to `labelOnComplete`
 
@@ -920,16 +920,16 @@ This fetches the issue description and comments to seed the PRD clarifying quest
 
 ## Notifications
 
-Configure notifications in autopilot.json to be alerted when autopilot completes:
+Configure notifications in autopilotagent.json to be alerted when autopilotagent completes:
 
 ```json
 {
   "notifications": {
     "enabled": true,
-    "command": "notify-send 'Autopilot' 'Session complete'",
-    "webhook": "https://hooks.example.com/autopilot",
+    "command": "notify-send 'Autopilotagent' 'Session complete'",
+    "webhook": "https://hooks.example.com/autopilotagent",
     "ntfy": {
-      "topic": "my-autopilot",
+      "topic": "my-autopilotagent",
       "server": "https://ntfy.sh"
     }
   }
@@ -945,7 +945,7 @@ At least one notification method should be configured if `enabled: true`.
 
 ## Auto-Documentation
 
-Autopilot can automatically update documentation after completing requirements. Configure in autopilot.json:
+Autopilotagent can automatically update documentation after completing requirements. Configure in autopilotagent.json:
 
 ```json
 {
@@ -965,7 +965,7 @@ Autopilot can automatically update documentation after completing requirements. 
 
 **Changelog generation:**
 
-When enabled, autopilot adds entries to your changelog after completing requirements:
+When enabled, autopilotagent adds entries to your changelog after completing requirements:
 
 ```markdown
 ## [Unreleased]
@@ -984,7 +984,7 @@ Supported formats:
 
 **README updates:**
 
-When `readme.enabled: true`, autopilot can update specified sections of your README based on completed features. Use with caution - review changes before committing.
+When `readme.enabled: true`, autopilotagent can update specified sections of your README based on completed features. Use with caution - review changes before committing.
 
 **Per-requirement control:**
 
@@ -1000,13 +1000,13 @@ Add `skipDocs: true` to individual requirements to skip documentation for that i
 
 ## Metrics and Analytics
 
-Autopilot can track metrics across sessions to help identify patterns and improve effectiveness. Configure in autopilot.json:
+Autopilotagent can track metrics across sessions to help identify patterns and improve effectiveness. Configure in autopilotagent.json:
 
 ```json
 {
   "metrics": {
     "enabled": true,
-    "file": "docs/autopilot/autopilot-metrics.json"
+    "file": "docs/autopilotagent/autopilotagent-metrics.json"
   }
 }
 ```
@@ -1025,7 +1025,7 @@ Autopilot can track metrics across sessions to help identify patterns and improv
   "sessions": [
     {
       "date": "2026-01-09",
-      "taskFile": "docs/autopilot/user-auth/user-auth.json",
+      "taskFile": "docs/autopilotagent/user-auth/user-auth.json",
       "completed": 5,
       "stuck": 1,
       "invalid": 0,
@@ -1052,15 +1052,15 @@ Autopilot can track metrics across sessions to help identify patterns and improv
 
 **Viewing metrics:**
 
-Run `/autopilot metrics` to generate a summary report of your autopilot usage patterns.
+Run `/autopilotagent metrics` to generate a summary report of your autopilotagent usage patterns.
 
 ## Resume Workflow
 
-To resume an interrupted autopilot session:
+To resume an interrupted autopilotagent session:
 
 1. **Check the notes file** (`TASKFILE-notes.md`) to see current state
 2. **Find the next requirement ID** from "Working on" or check the JSON for first non-passing requirement
-3. **Resume with --start-from**: `/autopilot TASKFILE --start-from ID`
+3. **Resume with --start-from**: `/autopilotagent TASKFILE --start-from ID`
 
 The `--start-from` flag skips all requirements with IDs less than the specified ID. This is useful when:
 - A session was interrupted and you want to continue
@@ -1153,11 +1153,11 @@ Requirements can specify a `dependsOn` field to declare dependencies on other re
 
 **Parallel execution with multiple instances:**
 1. Split independent requirements into separate task files
-2. Create a branch for each task file: `git checkout -b autopilot/task-a`
-3. Run autopilot on each branch in separate terminals
-4. Merge branches when complete: `git merge autopilot/task-a autopilot/task-b`
+2. Create a branch for each task file: `git checkout -b autopilotagent/task-a`
+3. Run autopilotagent on each branch in separate terminals
+4. Merge branches when complete: `git merge autopilotagent/task-a autopilotagent/task-b`
 
-Alternatively, identify a set of independent requirements and run them on a single branch in one session - autopilot will work through them sequentially but you avoid branch management.
+Alternatively, identify a set of independent requirements and run them on a single branch in one session - autopilotagent will work through them sequentially but you avoid branch management.
 
 ### Test Types
 
@@ -1166,7 +1166,7 @@ Requirements can specify a `testType` field to use different test commands:
 - `integration` - Tests that involve multiple components or external services
 - `e2e` - End-to-end tests using browser automation or full system tests
 
-Configure test commands per type in autopilot.json:
+Configure test commands per type in autopilotagent.json:
 
 ```json
 {
@@ -1209,7 +1209,7 @@ When this happens:
 
 ## Common Behaviors (All Modes)
 
-- Read feedback loop commands from `autopilot.json`
+- Read feedback loop commands from `autopilotagent.json`
 - Before committing, run enabled feedback loops: typecheck, tests, lint
 - Do NOT commit if any feedback loop fails - fix first
 - Skip disabled feedback loops (where `enabled: false`)
@@ -1239,17 +1239,17 @@ Some feedback loops need network access that the sandbox blocks:
 - **Docker port forwarding**: Commands that need to reach containerized services
 - **External APIs**: Integration tests hitting real endpoints
 
-If you see errors like "Can't reach database server at localhost:5432", the project should set `sandbox: false` for that feedback loop in autopilot.json.
+If you see errors like "Can't reach database server at localhost:5432", the project should set `sandbox: false` for that feedback loop in autopilotagent.json.
 
 ### Pre-existing Failures
 
-**Ideally, projects should have green feedback loops before starting autopilot.** All typecheck, test, and lint commands should pass. This ensures autopilot can detect when your changes break something.
+**Ideally, projects should have green feedback loops before starting autopilotagent.** All typecheck, test, and lint commands should pass. This ensures autopilotagent can detect when your changes break something.
 
 If a project has pre-existing failures that cannot be fixed immediately:
 
 1. **Capture baseline at session start**: Run feedback loops and record error counts
-2. **Configure in autopilot.json**: Add a `baseline` section with known failures
-3. **Delta checking**: Autopilot should only fail on NEW errors beyond the baseline
+2. **Configure in autopilotagent.json**: Add a `baseline` section with known failures
+3. **Delta checking**: Autopilotagent should only fail on NEW errors beyond the baseline
 
 Example baseline configuration:
 ```json
@@ -1355,7 +1355,7 @@ This structured format enables:
 **Cause:** Claude Code's sandbox blocks Docker port forwarding. The container works fine internally, but connections from the host to forwarded ports are blocked.
 
 **Solution:**
-1. Set `sandbox: false` in `autopilot.json` for the tests feedback loop:
+1. Set `sandbox: false` in `autopilotagent.json` for the tests feedback loop:
    ```json
    "tests": {
      "enabled": true,
@@ -1363,7 +1363,7 @@ This structured format enables:
      "sandbox": false
    }
    ```
-2. For ad-hoc test runs outside autopilot, use `dangerouslyDisableSandbox: true` in Bash tool calls.
+2. For ad-hoc test runs outside autopilotagent, use `dangerouslyDisableSandbox: true` in Bash tool calls.
 
 **Don't waste time debugging Docker networking** - if you see this error, it's almost certainly the sandbox. Try disabling it first.
 

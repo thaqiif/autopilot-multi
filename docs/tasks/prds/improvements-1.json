@@ -1,6 +1,6 @@
 {
   "name": "improvements",
-  "description": "Comprehensive improvements to the Autopilot workflow toolkit based on real-world testing feedback and enhancement suggestions",
+  "description": "Comprehensive improvements to the Autopilotagent workflow toolkit based on real-world testing feedback and enhancement suggestions",
   "goals": [
     "Strengthen TDD enforcement with explicit failure verification",
     "Improve robustness for real-world project conditions (pre-existing failures, sandbox issues)",
@@ -63,7 +63,7 @@
           "passes": true
         },
         "implement": {
-          "description": "Add `sandbox` config option per feedback loop in autopilot.schema.json. Update autopilot.md to construct commands with appropriate sandbox settings",
+          "description": "Add `sandbox` config option per feedback loop in autopilotagent.schema.json. Update autopilotagent.md to construct commands with appropriate sandbox settings",
           "passes": true
         },
         "refactor": {
@@ -72,9 +72,9 @@
         }
       },
       "verification": [
-        "autopilot.schema.json has sandbox option per feedback loop",
+        "autopilotagent.schema.json has sandbox option per feedback loop",
         "Documentation explains when to use dangerouslyDisableSandbox",
-        "autopilot.md uses sandbox config when constructing commands"
+        "autopilotagent.md uses sandbox config when constructing commands"
       ],
       "passes": true
     },
@@ -90,7 +90,7 @@
           "passes": true
         },
         "implement": {
-          "description": "Add `knownFailures` section to autopilot.schema.json OR implement delta-based checking. Update autopilot.md to capture baseline at start.",
+          "description": "Add `knownFailures` section to autopilotagent.schema.json OR implement delta-based checking. Update autopilotagent.md to capture baseline at start.",
           "passes": true
         },
         "refactor": {
@@ -99,8 +99,8 @@
         }
       },
       "verification": [
-        "autopilot.json can specify known/baseline failures to ignore",
-        "Autopilot only fails on NEW errors introduced during the session",
+        "autopilotagent.json can specify known/baseline failures to ignore",
+        "Autopilotagent only fails on NEW errors introduced during the session",
         "Clear documentation on handling pre-existing issues"
       ],
       "passes": true
@@ -113,7 +113,7 @@
       "context": "Prompt says 'Read notes file first' but it doesn't exist on first run.",
       "tdd": {
         "test": {
-          "description": "Review autopilot.md for notes file handling",
+          "description": "Review autopilotagent.md for notes file handling",
           "passes": true
         },
         "implement": {
@@ -126,7 +126,7 @@
         }
       },
       "verification": [
-        "Autopilot handles missing notes file gracefully",
+        "Autopilotagent handles missing notes file gracefully",
         "Initial notes file has proper structure",
         "No errors on first run of a new task file"
       ],
@@ -140,7 +140,7 @@
       "context": "Currently we ask Claude to verify tests fail but there's no enforcement.",
       "tdd": {
         "test": {
-          "description": "Review current TDD flow in autopilot.md",
+          "description": "Review current TDD flow in autopilotagent.md",
           "passes": true
         },
         "implement": {
@@ -163,7 +163,7 @@
       "id": "6",
       "category": "functional",
       "priority": "high",
-      "description": "Generate completion summary report when autopilot finishes",
+      "description": "Generate completion summary report when autopilotagent finishes",
       "context": "Users need visibility into what was accomplished.",
       "tdd": {
         "test": {
@@ -171,7 +171,7 @@
           "passes": true
         },
         "implement": {
-          "description": "Add summary generation at end of autopilot.md: requirements completed vs stuck, commits made, files modified, test coverage delta if available",
+          "description": "Add summary generation at end of autopilotagent.md: requirements completed vs stuck, commits made, files modified, test coverage delta if available",
           "passes": true
         },
         "refactor": {
@@ -192,7 +192,7 @@
       "category": "functional",
       "priority": "high",
       "description": "Add --start-from flag to resume from specific requirement",
-      "context": "If autopilot stops mid-run, it restarts evaluation from scratch.",
+      "context": "If autopilotagent stops mid-run, it restarts evaluation from scratch.",
       "tdd": {
         "test": {
           "description": "Review current requirement iteration logic",
@@ -203,7 +203,7 @@
           "passes": true
         },
         "refactor": {
-          "description": "Document the resume workflow in autopilot.md",
+          "description": "Document the resume workflow in autopilotagent.md",
           "passes": true
         }
       },
@@ -226,7 +226,7 @@
           "passes": true
         },
         "implement": {
-          "description": "Create git tag before each requirement (autopilot/req-{id}/start). Add /autopilot rollback <id> mode.",
+          "description": "Create git tag before each requirement (autopilotagent/req-{id}/start). Add /autopilotagent rollback <id> mode.",
           "passes": true
         },
         "refactor": {
@@ -303,7 +303,7 @@
       "context": "Currently assumes unit tests only.",
       "tdd": {
         "test": {
-          "description": "Update autopilot.schema.json design",
+          "description": "Update autopilotagent.schema.json design",
           "passes": true
         },
         "implement": {
@@ -408,14 +408,14 @@
       "category": "functional",
       "priority": "medium",
       "description": "Add completion notification support",
-      "context": "User has to check back manually when autopilot finishes.",
+      "context": "User has to check back manually when autopilotagent finishes.",
       "tdd": {
         "test": {
           "description": "Design notification configuration",
           "passes": true
         },
         "implement": {
-          "description": "Add notification config to autopilot.schema.json. Support: webhook, desktop notification command, optional integrations (ntfy, PushOver)",
+          "description": "Add notification config to autopilotagent.schema.json. Support: webhook, desktop notification command, optional integrations (ntfy, PushOver)",
           "passes": true
         },
         "refactor": {
@@ -446,7 +446,7 @@
           "passes": true
         },
         "refactor": {
-          "description": "Support multiple autopilot instances on separate branches",
+          "description": "Support multiple autopilotagent instances on separate branches",
           "passes": true
         }
       },
@@ -544,7 +544,7 @@
       "category": "functional",
       "priority": "low",
       "description": "Add metrics and analytics tracking",
-      "context": "Track autopilot effectiveness over time.",
+      "context": "Track autopilotagent effectiveness over time.",
       "tdd": {
         "test": {
           "description": "Design metrics collection approach",

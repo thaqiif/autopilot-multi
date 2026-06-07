@@ -1,13 +1,13 @@
 # Changelog
 
-All notable changes to Autopilot will be documented in this file.
+All notable changes to Autopilotagent will be documented in this file.
 
 ## 2026-06-02
 
 ### Added
-- **Multi-agent wrapper support** - `run.sh` now supports `--agent claude|codex|opencode|cmd` and `AUTOPILOT_AGENT`, allowing the same task loop to launch Claude Code, Codex CLI, OpenCode, or Command Code sessions. Claude keeps the existing slash-command path; other agents run headless with prompts that point at the shared Autopilot command specs.
-- **Shared agent installation targets** - `install.sh` now links `AGENTS.md`, command specs, and the Autopilot Agent Skill into Claude, Codex, OpenCode, and Command Code config locations while preserving the existing Claude slash-command and hook install.
-- **Autopilot Agent Skill** - Added `skills/autopilot/SKILL.md` so supported agents can discover the Autopilot workflow as a reusable Agent Skill.
+- **Multi-agent wrapper support** - `run.sh` now supports `--agent claude|codex|opencode|cmd` and `AUTOPILOTAGENT_AGENT`, allowing the same task loop to launch Claude Code, Codex CLI, OpenCode, or Command Code sessions. Claude keeps the existing slash-command path; other agents run headless with prompts that point at the shared Autopilotagent command specs.
+- **Shared agent installation targets** - `install.sh` now links `AGENTS.md`, command specs, and the Autopilotagent Agent Skill into Claude, Codex, OpenCode, and Command Code config locations while preserving the existing Claude slash-command and hook install.
+- **Autopilotagent Agent Skill** - Added `skills/autopilotagent/SKILL.md` so supported agents can discover the Autopilotagent workflow as a reusable Agent Skill.
 - **Install test coverage** - Added `tests/install-tests.sh` to verify installer behavior using an isolated `HOME`.
 - **Executable agent loop tests** - Added fake CLI coverage for non-interactive launch arguments, task progress, invalid-test progress, stop handling, and cleanup detection.
 
@@ -16,7 +16,7 @@ All notable changes to Autopilot will be documented in this file.
 - **Codex automation syntax** - Switched Codex dry-run and execution commands from deprecated `--full-auto` to explicit `--sandbox workspace-write`.
 - **Agent exit codes and cleanup** - Preserved non-zero agent exit codes after `wait` and replaced machine-specific stale-process cleanup patterns with token-based matching for Claude, Codex, OpenCode, and Command Code.
 - **OpenCode automation syntax** - Switched OpenCode execution from legacy prompt mode to current `opencode run --dangerously-skip-permissions`.
-- **OpenCode permission compatibility** - Added `AUTOPILOT_OPENCODE_PERMISSION_FLAG` so older or differently configured OpenCode installs can override or disable the default permission bypass flag.
+- **OpenCode permission compatibility** - Added `AUTOPILOTAGENT_OPENCODE_PERMISSION_FLAG` so older or differently configured OpenCode installs can override or disable the default permission bypass flag.
 - **Batch progress for invalid tests** - Count `invalidTest: true` as batch progress while monitoring a running agent session and report invalid-test progress in the session summary.
 - **Model forwarding** - Forward `--model` to Codex, OpenCode, and Command Code runners when supplied.
 
@@ -30,9 +30,9 @@ All notable changes to Autopilot will be documented in this file.
 ## 2026-03-23
 
 ### Added
-- **Parallel agent support (Phase 1)** - Multiple `run.sh` instances can now run simultaneously on different task files. Per-feature state files (PID, loop-state, stop-signal) are stored in the feature's directory (`docs/autopilot/<feature>/`) instead of the shared `.autopilot/` root. `run.sh` exports `AUTOPILOT_STATE_DIR` so the stop-hook finds the correct loop-state file per instance.
+- **Parallel agent support (Phase 1)** - Multiple `run.sh` instances can now run simultaneously on different task files. Per-feature state files (PID, loop-state, stop-signal) are stored in the feature's directory (`docs/autopilotagent/<feature>/`) instead of the shared `.autopilotagent/` root. `run.sh` exports `AUTOPILOTAGENT_STATE_DIR` so the stop-hook finds the correct loop-state file per instance.
 - **`hooks/git-commit` commit mutex** - New wrapper around `git commit` that serializes commits via `mkdir` lock (POSIX atomic). Prevents staging-area races when parallel agents commit simultaneously.
-- **Parallel awareness in `autopilot.md`** - Phase 0c instructs agents to check for sibling `run.pid` files and follow safe git practices (specific file adds, serialized commits via `hooks/git-commit`) when running in parallel.
+- **Parallel awareness in `autopilotagent.md`** - Phase 0c instructs agents to check for sibling `run.pid` files and follow safe git practices (specific file adds, serialized commits via `hooks/git-commit`) when running in parallel.
 
 ### Changed
 - **`CLAUDE.md`** - Added superpowers skill output conventions: plans save to `docs/plans/` (not `docs/superpowers/plans/`).
@@ -45,7 +45,7 @@ All notable changes to Autopilot will be documented in this file.
 - **PRD option recommendations** - When asking clarifying questions with lettered options, the agent now recommends which option it thinks is best and explains why. Users can still pick any option.
 
 ### Fixed
-- **Git tag conflicts** - Autopilot failed when resuming incomplete requirements because `git tag autopilot/req-ID/start` errors on existing tags. Changed instruction to use `git tag -f` which overwrites stale tags from prior attempts. Affects resumed runs, post-rollback retries, and un-stuck requirements.
+- **Git tag conflicts** - Autopilotagent failed when resuming incomplete requirements because `git tag autopilotagent/req-ID/start` errors on existing tags. Changed instruction to use `git tag -f` which overwrites stale tags from prior attempts. Affects resumed runs, post-rollback retries, and un-stuck requirements.
 
 ---
 
@@ -60,7 +60,7 @@ All notable changes to Autopilot will be documented in this file.
 
 ### Changed
 - **PRD clarifying questions** - Changed from "ask 3-5 critical questions" to "ask as many as a professional PM/senior dev would ask a client." Added follow-up question rounds, expanded guidelines with 14 areas to probe (users, flows, edge cases, data, permissions, integrations, performance, etc.). PRDs no longer have an "Open Questions" section — all questions must be resolved before writing.
-- **File paths restructured** - All generated files now live in `docs/autopilot/<feature-name>/` instead of `docs/tasks/prds/`. Analytics go in `docs/autopilot/<feature-name>/analytics/`. Standalone mode notes (tests, lint, entropy) go in `docs/autopilot/<mode>/YYYY-MM-DD-notes.md`. Updated `prd.md`, `tasks.md`, `autopilot.md`, `analyze.md`, `CLAUDE.md`, `autopilot.schema.json`, `run.sh`, `install.sh`, `README.md`, and example files.
+- **File paths restructured** - All generated files now live in `docs/autopilotagent/<feature-name>/` instead of `docs/tasks/prds/`. Analytics go in `docs/autopilotagent/<feature-name>/analytics/`. Standalone mode notes (tests, lint, entropy) go in `docs/autopilotagent/<mode>/YYYY-MM-DD-notes.md`. Updated `prd.md`, `tasks.md`, `autopilotagent.md`, `analyze.md`, `CLAUDE.md`, `autopilotagent.schema.json`, `run.sh`, `install.sh`, `README.md`, and example files.
 - **Analytics directory derivation** - `run.sh` now derives the analytics directory from the task file path instead of reading a global config value.
 
 ---
@@ -78,15 +78,15 @@ All notable changes to Autopilot will be documented in this file.
 
 ### Changed
 - **`analytics.schema.json`** - `toolCalls`, `phases`, and `filesRead` now accept `null` with descriptions noting they are optional LLM-dependent fields that infrastructure does not track.
-- **`autopilot.md` ANALYTICS_INSTRUCTION** - Reduced from full analytics tracking to error logging only. Infrastructure handles iteration counting, requirement status, file tracking, and summary generation.
-- **`autopilot.md` loop-state template** - Now includes `analytics_file:` and `task_file:` in YAML frontmatter so the stop-hook can access them.
+- **`autopilotagent.md` ANALYTICS_INSTRUCTION** - Reduced from full analytics tracking to error logging only. Infrastructure handles iteration counting, requirement status, file tracking, and summary generation.
+- **`autopilotagent.md` loop-state template** - Now includes `analytics_file:` and `task_file:` in YAML frontmatter so the stop-hook can access them.
 
 ---
 
 ## 2026-02-13
 
 ### Changed
-- **run.sh permissions** - Replaced `--dangerously-skip-permissions` with `--allowedTools` to pre-approve tools individually. This avoids the interactive bypass permissions confirmation prompt that Claude Code now shows on every session, while keeping manual Claude Code sessions fully permissioned. A one-time workspace trust prompt appears the first time `autopilot` runs in a new project directory.
+- **run.sh permissions** - Replaced `--dangerously-skip-permissions` with `--allowedTools` to pre-approve tools individually. This avoids the interactive bypass permissions confirmation prompt that Claude Code now shows on every session, while keeping manual Claude Code sessions fully permissioned. A one-time workspace trust prompt appears the first time `autopilotagent` runs in a new project directory.
 
 ---
 
@@ -96,10 +96,10 @@ All notable changes to Autopilot will be documented in this file.
 - **Orphaned process cleanup** - `run.sh` now kills the entire process tree (MCP servers, subagents, bun workers) when terminating Claude sessions, not just the main process. Previously, child processes would reparent to init and accumulate indefinitely, consuming memory until the system killed new sessions.
 
 ### Added
-- **`kill_session()` helper** - Collects all descendant PIDs before sending SIGTERM, then force-kills survivors after 5 seconds. Prevents orphaned processes from accumulating across autopilot runs.
+- **`kill_session()` helper** - Collects all descendant PIDs before sending SIGTERM, then force-kills survivors after 5 seconds. Prevents orphaned processes from accumulating across autopilotagent runs.
 - **EXIT trap cleanup** - `run.sh` now cleans up the active Claude session on any exit (normal, Ctrl+C, SIGTERM), ensuring no child processes are left behind.
 - **`--cleanup` flag** - `run.sh --cleanup` kills stale background Claude/MCP processes before starting a new run. Useful after ungraceful terminations.
-- **`cleanup.sh`** - Standalone script to find and kill orphaned Claude Code processes. Supports `--dry-run` to preview and `--all` to include terminal-attached sessions. Installed as `autopilot-cleanup` CLI command.
+- **`cleanup.sh`** - Standalone script to find and kill orphaned Claude Code processes. Supports `--dry-run` to preview and `--all` to include terminal-attached sessions. Installed as `autopilotagent-cleanup` CLI command.
 - **SIGINT/SIGTERM handling** - `run.sh` now traps Ctrl+C and SIGTERM for graceful shutdown with full process tree cleanup, instead of leaving orphans.
 
 ---
@@ -107,8 +107,8 @@ All notable changes to Autopilot will be documented in this file.
 ## 2026-01-24
 
 ### Changed
-- **Renamed `/init` to `/autopilot init`** - The init command is now namespaced under `/autopilot init` to avoid conflicting with Claude Code's native `/init` command (which creates CLAUDE.md files)
-  - File renamed from `commands/init.md` to `commands/autopilot:init.md`
+- **Renamed `/init` to `/autopilotagent init`** - The init command is now namespaced under `/autopilotagent init` to avoid conflicting with Claude Code's native `/init` command (which creates CLAUDE.md files)
+  - File renamed from `commands/init.md` to `commands/autopilotagent:init.md`
   - Symlink updated accordingly
   - Re-run `./install.sh` to update your symlinks
 
@@ -118,12 +118,12 @@ All notable changes to Autopilot will be documented in this file.
 
 ### Added
 - **Command loop mode** - Run any slash command repeatedly with fresh sessions
-  - Usage: `autopilot /my-command --max 5` or `/autopilot /my-command --max 5`
+  - Usage: `autopilotagent /my-command --max 5` or `/autopilotagent /my-command --max 5`
   - Runs the command N times, starting a fresh Claude session each iteration
   - Useful for repetitive tasks, batch processing, or running review commands multiple times
-  - Default iterations configurable via `iterations.command` in autopilot.json (default: 10)
+  - Default iterations configurable via `iterations.command` in autopilotagent.json (default: 10)
 - **`--max N` flag** for run.sh command mode to specify iteration count
-- **`iterations.command`** configuration in autopilot.json schema and template
+- **`iterations.command`** configuration in autopilotagent.json schema and template
 
 ### Changed
 - **run.sh** now supports two modes: task file mode (existing) and command loop mode (new)
@@ -135,16 +135,16 @@ All notable changes to Autopilot will be documented in this file.
 
 ### Added
 - **Model selection** - `run.sh` now supports `--model` flag to choose Claude model (opus, sonnet, haiku, or full model name)
-  - Example: `autopilot tasks.json --model sonnet` for faster, cheaper runs
-  - Example: `autopilot tasks.json --model haiku --batch 5` for maximum speed
+  - Example: `autopilotagent tasks.json --model sonnet` for faster, cheaper runs
+  - Example: `autopilotagent tasks.json --model haiku --batch 5` for maximum speed
 - **Debug logging** - Stop-hook includes DEBUG statements for troubleshooting completion detection
-- **Sentinel stop file** - Autopilot writes `.autopilot/stop-signal` when all requirements complete, signaling `run.sh` to exit
+- **Sentinel stop file** - Autopilotagent writes `.autopilotagent/stop-signal` when all requirements complete, signaling `run.sh` to exit
 - **Active session monitoring** - `run.sh` now runs Claude in background and actively monitors for completion
   - Checks task JSON every 2 seconds for progress
   - Detects batch completion and terminates for fresh context
   - Idle detection: restarts after 30s idle if progress was made (prevents stale context)
   - Timeout detection: terminates after 10 minutes with no progress (prevents stuck sessions)
-- **Test fixtures** - Added `tests/fixtures/` with minimal autopilot.json and tasks-simple.json for development testing
+- **Test fixtures** - Added `tests/fixtures/` with minimal autopilotagent.json and tasks-simple.json for development testing
 
 ### Fixed
 - **Loop termination** - Stop-hook now sends SIGTERM to parent Claude process when complete, ensuring Claude actually exits (previously just returned "allow" which didn't force termination)
@@ -157,8 +157,8 @@ All notable changes to Autopilot will be documented in this file.
 ### Added
 - **Quick Start guide** - New 5-minute getting started section with decision tree for choosing execution method
 - **Expanded troubleshooting** - 15+ common issues with detailed solutions (was 4 items)
-- **Monorepo examples** - `examples/autopilot-monorepo.json` and `examples/tasks-monorepo.json`
-- **Mode: Metrics** - New command `/autopilot metrics` (alias for analyze with aggregation focus)
+- **Monorepo examples** - `examples/autopilotagent-monorepo.json` and `examples/tasks-monorepo.json`
+- **Mode: Metrics** - New command `/autopilotagent metrics` (alias for analyze with aggregation focus)
 - **Dependency validation** - `run.sh` now checks for `jq` and `claude` CLI before running
 - **JSON validation** - `run.sh` validates task file is valid JSON with requirements array
 - **Progress visibility** - `run.sh` shows completed/stuck counts after each session
@@ -175,12 +175,12 @@ All notable changes to Autopilot will be documented in this file.
 ## 2026-01-13 (earlier)
 
 ### Added
-- **Built-in loop mechanism** - Autopilot now includes its own stop-hook, eliminating the dependency on the external ralph-loop plugin
+- **Built-in loop mechanism** - Autopilotagent now includes its own stop-hook, eliminating the dependency on the external ralph-loop plugin
   - `hooks/stop-hook.sh` - Intercepts exit attempts, re-feeds prompts for iteration
   - `hooks/hooks.json` - Hook configuration template
-  - State stored in `.autopilot/loop-state.md` with YAML frontmatter
-- **`/autopilot cancel` command** - Cancel an active hook-based loop by removing the state file
-  - Different from `/autopilot stop` which signals the run.sh wrapper
+  - State stored in `.autopilotagent/loop-state.md` with YAML frontmatter
+- **`/autopilotagent cancel` command** - Cancel an active hook-based loop by removing the state file
+  - Different from `/autopilotagent stop` which signals the run.sh wrapper
   - Graceful cancellation - current work completes before loop exits
 - **Improved stop-hook features** (based on ralph-loop):
   - Reads transcript path from hook input JSON (not environment variable)
@@ -190,9 +190,9 @@ All notable changes to Autopilot will be documented in this file.
   - Better system message with promise guidance
 
 ### Changed
-- **No external plugin required** - Autopilot is now fully self-contained
+- **No external plugin required** - Autopilotagent is now fully self-contained
 - **Installation** - `./install.sh` now installs hooks to `~/.claude/hooks/` and creates `~/.claude/hooks.json`
-- **Loop state location** - Now uses `.autopilot/loop-state.md` (project-local) instead of `.claude/ralph-loop.local.md`
+- **Loop state location** - Now uses `.autopilotagent/loop-state.md` (project-local) instead of `.claude/ralph-loop.local.md`
 
 ### Removed
 - **Ralph Loop plugin dependency** - No longer requires `claude plugins:install claude-plugins-official`
@@ -208,12 +208,12 @@ All notable changes to Autopilot will be documented in this file.
   - Configurable threshold via `analytics.thrashingThreshold` (default: 3)
   - Immediately marks task as stuck when thrashing detected
   - Logs pattern to analytics for post-session analysis
-- **`/autopilot analyze` command** - Post-session analysis of analytics files
+- **`/autopilotagent analyze` command** - Post-session analysis of analytics files
   - Calculates efficiency score (productive vs wasted iterations)
   - Identifies waste patterns (thrashing, environment issues, missing context)
-  - Generates suggested AGENTS.md entries and autopilot.json changes
+  - Generates suggested AGENTS.md entries and autopilotagent.json changes
   - Supports `--last`, `--since Nd`, `--task <name>`, `--clear` flags
-- **Analytics configuration** in `autopilot.json`:
+- **Analytics configuration** in `autopilotagent.json`:
   - `analytics.enabled` - Toggle analytics (default: true)
   - `analytics.directory` - Where to store files (default: `docs/tasks/analytics`)
   - `analytics.thrashingThreshold` - Consecutive errors before abort (default: 3)
@@ -237,8 +237,8 @@ All notable changes to Autopilot will be documented in this file.
 - **`codeAnalysis` field** - Requirements now include rich context: `existingFiles`, `relatedTests`, `patterns`, and `targetFiles` (modify/create)
 - **`--refresh` flag for `/tasks`** - Re-analyze incomplete requirements while preserving completed ones; useful for mid-implementation course correction
 - **`tasks.schema.json`** - JSON Schema for task files, enabling validation and editor autocomplete
-- **Phase-numbered structure** - Both `/tasks` and `autopilot.md` now use explicit phase numbering (Phase 0 for pre-flight, Phase 1+ for execution)
-- **Critical guardrails section** - `autopilot.md` now has Phase 99999+ with escalating priority guardrails:
+- **Phase-numbered structure** - Both `/tasks` and `autopilotagent.md` now use explicit phase numbering (Phase 0 for pre-flight, Phase 1+ for execution)
+- **Critical guardrails section** - `autopilotagent.md` now has Phase 99999+ with escalating priority guardrails:
   - 99999: Feedback loops before commits
   - 999999: Never commit on failure
   - 9999999: Search before implementing
@@ -251,7 +251,7 @@ All notable changes to Autopilot will be documented in this file.
 - **TDD Red phase** - Now requires tests covering ALL acceptance criteria before proceeding to Green phase
 - **Code-aware TDD descriptions** - Test and implementation descriptions now reference specific files, patterns, and utilities discovered during analysis
 - **Example tasks file** - `examples/tasks-user-auth.json` updated with `codeAnalysis` examples showing the new structure
-- **"Don't assume not implemented" guardrail** - Built into `/tasks` Phase 1 and `autopilot.md` guardrails, ensuring Claude searches before implementing
+- **"Don't assume not implemented" guardrail** - Built into `/tasks` Phase 1 and `autopilotagent.md` guardrails, ensuring Claude searches before implementing
 
 ### Inspiration
 - Gap analysis, phase numbering, and guardrail patterns adapted from [Ralph Playbook](https://github.com/ghuntley/ralph-playbook) by Geoffrey Huntley
@@ -262,8 +262,8 @@ All notable changes to Autopilot will be documented in this file.
 - **run.sh** - Token-frugal wrapper script that runs Claude in a loop with fresh context per requirement
 - **--batch N flag** - Limit requirements completed per session for manual token management
 - **Resume support** - `--start-from <id>` flag to resume from specific requirement
-- **Rollback mechanism** - Git tags created before each requirement (`autopilot/req-{id}/start`), with `/autopilot rollback <id>` mode
-- **Completion summary report** - Shows completed vs stuck requirements, commits made, and files modified when autopilot finishes
+- **Rollback mechanism** - Git tags created before each requirement (`autopilotagent/req-{id}/start`), with `/autopilotagent rollback <id>` mode
+- **Completion summary report** - Shows completed vs stuck requirements, commits made, and files modified when autopilotagent finishes
 - **Progress tracking** - Structured YAML log in notes file tracking timing, commits, and files per requirement
 - **Completion notifications** - Desktop notifications, webhooks, or ntfy.sh integration via `notifications` config
 - **Test type support** - Requirements can specify `testType` (unit, integration, e2e) with different test commands
@@ -288,7 +288,7 @@ All notable changes to Autopilot will be documented in this file.
 
 ### Fixed
 - **Argument parsing** - Fixed Ralph Loop skill args with semicolons/parentheses being interpreted as shell commands
-- **Pre-existing failures** - Baseline config allows autopilot to continue despite existing issues
+- **Pre-existing failures** - Baseline config allows autopilotagent to continue despite existing issues
 
 ## 2025-01-09
 
@@ -307,8 +307,8 @@ All notable changes to Autopilot will be documented in this file.
   - tests: 30 → 10
   - lint: 50 → 15
   - entropy: 30 → 10
-- Updated autopilot.json schema with new defaults
-- Updated autopilot.template.json with new defaults
+- Updated autopilotagent.json schema with new defaults
+- Updated autopilotagent.template.json with new defaults
 - All mode prompts rewritten to be more concise
 
 ### Fixed
@@ -320,12 +320,12 @@ All notable changes to Autopilot will be documented in this file.
 - Initial release
 - `/prd` command - Create human-readable PRDs with clarifying questions
 - `/tasks` command - Convert PRDs to machine-readable JSON with TDD phases
-- `/autopilot` command with four modes:
+- `/autopilotagent` command with four modes:
   - TDD task completion (default)
   - Test coverage improvement
   - Lint error fixing
   - Entropy/code cleanup
-- `/autopilot init` command for project configuration
+- `/autopilotagent init` command for project configuration
 - TDD enforcement (Red → Green → Refactor cycle)
 - Code-simplifier integration during refactor phase
 - Stuck handling after 3 failed iterations

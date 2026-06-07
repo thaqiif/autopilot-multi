@@ -54,7 +54,7 @@ Implement a secure user authentication system supporting email/password login an
 
 ## Timeline
 
-Not specified - autopilot will work through requirements sequentially.
+Not specified - autopilotagent will work through requirements sequentially.
 
 ## Open Questions
 

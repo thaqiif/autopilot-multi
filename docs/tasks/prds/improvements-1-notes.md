@@ -6,8 +6,8 @@
 - Blockers: none
 
 ## Files Modified
-- commands/autopilot.md (major updates: dependsOn support, issue tracker, monorepo workspaces, auto-docs, metrics, coverage targeting, learnings automation)
-- autopilot.schema.json (new sections: workspaces, issueTracker, documentation, metrics, coverage)
+- commands/autopilotagent.md (major updates: dependsOn support, issue tracker, monorepo workspaces, auto-docs, metrics, coverage targeting, learnings automation)
+- autopilotagent.schema.json (new sections: workspaces, issueTracker, documentation, metrics, coverage)
 - AGENTS.md (restructured Learnings section with categories and guidance)
 - CLAUDE.md (added Examples section)
 - examples/brainstorm.md (new)

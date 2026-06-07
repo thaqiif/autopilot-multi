@@ -2,19 +2,19 @@
 
 ## Goal
 
-Convert an approved human-readable PRD into a machine-readable JSON task file that autopilot can execute autonomously using Test-Driven Development. **Before generating tasks, analyze the codebase to understand what exists, identify patterns, and scope implementation accurately.**
+Convert an approved human-readable PRD into a machine-readable JSON task file that autopilotagent can execute autonomously using Test-Driven Development. **Before generating tasks, analyze the codebase to understand what exists, identify patterns, and scope implementation accurately.**
 
 ## TDD Workflow
 
-For each requirement, autopilot will:
+For each requirement, autopilotagent will:
 1. **Red** - Write a failing test that defines the expected behavior
 2. **Green** - Write minimal code to make the test pass
 3. **Refactor** - Clean up while keeping tests green
 
 ## Input
 
-- **New tasks:** `/tasks docs/autopilot/feature-name.md`
-- **Refresh existing:** `/tasks docs/autopilot/feature-name.json --refresh`
+- **New tasks:** `/tasks docs/autopilotagent/feature-name.md`
+- **Refresh existing:** `/tasks docs/autopilotagent/feature-name.json --refresh`
 
 ## Output
 
@@ -258,7 +258,7 @@ Based on code analysis, infer dependencies between requirements:
 When given an existing tasks JSON file with `--refresh`:
 
 ```
-/tasks docs/autopilot/feature.json --refresh
+/tasks docs/autopilotagent/feature.json --refresh
 ```
 
 ### Refresh Behavior
@@ -266,7 +266,7 @@ When given an existing tasks JSON file with `--refresh`:
 1. **Preserve completed work:** Keep all requirements where `passes: true`
 2. **Re-analyze incomplete:** Run Phase 0-1 for requirements where `passes: false`
 3. **Update codeAnalysis:** Refresh file lists and approaches based on current code state
-4. **Detect newly done:** Mark requirements `already-done` if implementation was completed outside autopilot
+4. **Detect newly done:** Mark requirements `already-done` if implementation was completed outside autopilotagent
 5. **Update notes:** Log refresh in the corresponding notes file
 
 ### When to Refresh
@@ -304,4 +304,4 @@ When given an existing tasks JSON file with `--refresh`:
 
 ## Next Step
 
-After generating the JSON, use `/autopilot [json-file]` to run autonomous TDD execution.
+After generating the JSON, use `/autopilotagent [json-file]` to run autonomous TDD execution.

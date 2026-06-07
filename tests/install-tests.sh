@@ -46,14 +46,14 @@ OUTPUT=$(HOME="$TMP_HOME" ./install.sh 2>&1)
 EXIT_CODE=$?
 
 test_it "install exits successfully" '[[ "$EXIT_CODE" == "0" ]]'
-test_it "installs claude command files" '[[ -L "$TMP_HOME/.claude/commands/autopilot.md" ]]'
+test_it "installs claude command files" '[[ -L "$TMP_HOME/.claude/commands/autopilotagent.md" ]]'
 test_it "installs codex instructions" '[[ -L "$TMP_HOME/.codex/AGENTS.md" ]]'
 test_it "installs opencode instructions" '[[ -L "$TMP_HOME/.config/opencode/AGENTS.md" ]]'
 test_it "installs command code instructions" '[[ -L "$TMP_HOME/.commandcode/AGENTS.md" ]]'
-test_it "installs shared agent skill" '[[ -L "$TMP_HOME/.agents/skills/autopilot" ]]'
-test_it "installs claude skill" '[[ -L "$TMP_HOME/.claude/skills/autopilot" ]]'
-test_it "installs opencode skill" '[[ -L "$TMP_HOME/.config/opencode/skills/autopilot" ]]'
-test_it "installs command code skill" '[[ -L "$TMP_HOME/.commandcode/skills/autopilot" ]]'
+test_it "installs shared agent skill" '[[ -L "$TMP_HOME/.agents/skills/autopilotagent" ]]'
+test_it "installs claude skill" '[[ -L "$TMP_HOME/.claude/skills/autopilotagent" ]]'
+test_it "installs opencode skill" '[[ -L "$TMP_HOME/.config/opencode/skills/autopilotagent" ]]'
+test_it "installs command code skill" '[[ -L "$TMP_HOME/.commandcode/skills/autopilotagent" ]]'
 test_it "advertises multi-agent runner" 'output_contains "Agents supported: claude, codex, opencode, cmd"'
 
 echo ""
