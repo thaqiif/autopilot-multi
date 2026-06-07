@@ -11,7 +11,13 @@ Use this skill when the user asks to analyze session analytics, review autopilot
 
 ## Source of Truth
 
-Read `commands/analyze.md` before executing. Do not invent a parallel implementation.
+Read the full command spec before executing. The spec is at one of these locations depending on your agent:
+- Claude Code: `~/.claude/commands/analyze.md`
+- Command Code: `~/.commandcode/autopilotagent/commands/analyze.md`
+- OpenCode: `~/.config/opencode/autopilotagent/commands/analyze.md`
+- Codex: `~/.codex/autopilotagent/commands/analyze.md`
+
+Do not invent a parallel implementation.
 
 ## Execution Rules
 

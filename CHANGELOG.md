@@ -5,6 +5,8 @@ All notable changes to Autopilotagent will be documented in this file.
 ## 2026-06-07
 
 ### Fixed
+- **Skill source-of-truth paths** - Updated all SKILL.md files to use absolute per-agent paths instead of broken relative paths (e.g. `~/.claude/commands/prd.md` instead of `commands/prd.md`). Claude was trying to read from `~/.claude/skills/prd/commands/prd.md` which didn't exist.
+- **Missing command symlinks** - Added `cancel.md` and `stop.md` to `install.sh` symlink list so they're installed to `~/.claude/commands/`.
 - **Task file schema enforcement** - Added explicit field-name mapping table and validation checklist to `commands/tasks.md` to prevent agents from generating non-conforming JSON (e.g. `tasks` instead of `requirements`, `title` instead of `description`, missing `tdd` structure). Agents like CommandCode that don't follow the example JSON closely will now see a clear "CRITICAL: Exact Schema Required" section with wrong-name warnings.
 
 ## 2026-06-02

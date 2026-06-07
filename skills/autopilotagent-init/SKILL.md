@@ -11,7 +11,13 @@ Use this skill when the user asks to initialize autopilotagent, set up project c
 
 ## Source of Truth
 
-Read `commands/autopilotagent:init.md` before executing. Do not invent a parallel implementation.
+Read the full command spec before executing. The spec is at one of these locations depending on your agent:
+- Claude Code: `~/.claude/commands/autopilotagent:init.md`
+- Command Code: `~/.commandcode/autopilotagent/commands/autopilotagent:init.md`
+- OpenCode: `~/.config/opencode/autopilotagent/commands/autopilotagent:init.md`
+- Codex: `~/.codex/autopilotagent/commands/autopilotagent:init.md`
+
+Do not invent a parallel implementation.
 
 ## Execution Rules
 

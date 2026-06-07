@@ -11,13 +11,12 @@ Use this skill when the user asks to run or continue Autopilotagent, convert PRD
 
 ## Source of Truth
 
-Autopilotagent command behavior lives in the repository command specs:
+Autopilotagent command behavior lives in the repository command specs. Resolve paths based on your agent:
 
-- `commands/autopilotagent.md`
-- `commands/tasks.md`
-- `commands/prd.md`
-- `commands/analyze.md`
-- `AGENTS.md`
+- Claude Code: `~/.claude/commands/*.md` and `~/.claude/AGENTS.md`
+- Command Code: `~/.commandcode/autopilotagent/commands/*.md` and `~/.commandcode/AGENTS.md`
+- OpenCode: `~/.config/opencode/autopilotagent/commands/*.md` and `~/.config/opencode/AGENTS.md`
+- Codex: `~/.codex/autopilotagent/commands/*.md` and `~/.codex/AGENTS.md`
 
 Read the relevant command spec before executing a workflow. Do not invent a parallel implementation.
 
@@ -25,7 +24,7 @@ Read the relevant command spec before executing a workflow. Do not invent a para
 
 1. Follow `AGENTS.md` guardrails: test before implementation, search before creating code, no placeholders, and no commits with failing feedback loops.
 2. For task JSON runs, process one workable requirement at a time unless the prompt specifies a batch size.
-3. Update the task JSON, notes file, git tags, commits, and analytics exactly as `commands/autopilotagent.md` describes.
+3. Update the task JSON, notes file, git tags, commits, and analytics exactly as the `autopilotagent.md` command spec describes.
 4. If running headlessly, do not rely on slash-command registration. Treat `/autopilotagent ...`, `/tasks ...`, `/prd ...`, and `/analyze ...` as instructions to execute the corresponding command spec.
 5. When the requested batch or command is complete, print `COMPLETE` and exit.
 

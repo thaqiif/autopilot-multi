@@ -11,7 +11,13 @@ Use this skill when the user asks to gracefully stop the autopilotagent wrapper 
 
 ## Source of Truth
 
-Read `commands/stop.md` before executing. Do not invent a parallel implementation.
+Read the full command spec before executing. The spec is at one of these locations depending on your agent:
+- Claude Code: `~/.claude/commands/stop.md`
+- Command Code: `~/.commandcode/autopilotagent/commands/stop.md`
+- OpenCode: `~/.config/opencode/autopilotagent/commands/stop.md`
+- Codex: `~/.codex/autopilotagent/commands/stop.md`
+
+Do not invent a parallel implementation.
 
 ## Execution Rules
 

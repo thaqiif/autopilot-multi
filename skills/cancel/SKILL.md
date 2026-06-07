@@ -11,7 +11,13 @@ Use this skill when the user asks to cancel an autopilotagent loop or stop a run
 
 ## Source of Truth
 
-Read `commands/cancel.md` before executing. Do not invent a parallel implementation.
+Read the full command spec before executing. The spec is at one of these locations depending on your agent:
+- Claude Code: `~/.claude/commands/cancel.md`
+- Command Code: `~/.commandcode/autopilotagent/commands/cancel.md`
+- OpenCode: `~/.config/opencode/autopilotagent/commands/cancel.md`
+- Codex: `~/.codex/autopilotagent/commands/cancel.md`
+
+Do not invent a parallel implementation.
 
 ## Execution Rules
 
