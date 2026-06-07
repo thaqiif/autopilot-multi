@@ -102,6 +102,12 @@ if [ -f "$HOOKS_JSON" ]; then
     # Check if autopilotagent hook is already configured
     if grep -q "autopilotagent-stop-hook" "$HOOKS_JSON" 2>/dev/null; then
         echo "  Hooks already configured in $HOOKS_JSON"
+    elif command -v jq &>/dev/null; then
+        # Merge autopilotagent stop-hook into existing hooks.json, preserving other entries
+        TEMP_HOOKS=$(mktemp)
+        jq '.hooks.stop += [{"command": "~/.claude/hooks/autopilotagent-stop-hook.sh", "description": "Autopilotagent loop mechanism"}] | .hooks.stop |= unique_by(.command)' \
+            "$HOOKS_JSON" > "$TEMP_HOOKS" && mv "$TEMP_HOOKS" "$HOOKS_JSON"
+        echo "  Merged autopilotagent stop-hook into $HOOKS_JSON"
     else
         echo "  Note: Add autopilotagent stop-hook to your $HOOKS_JSON manually:"
         echo '    "stop": [{"command": "~/.claude/hooks/autopilotagent-stop-hook.sh"}]'
