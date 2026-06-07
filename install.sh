@@ -57,19 +57,29 @@ link_agent_file() {
     echo "  Linked: $label"
 }
 
+SKILLS="autopilotagent prd tasks analyze autopilotagent-init cancel stop"
+
 link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.codex/AGENTS.md "AGENTS.md → ~/.codex/AGENTS.md"
 link_agent_file "$SCRIPT_DIR/commands" ~/.codex/autopilotagent/commands "commands/ → ~/.codex/autopilotagent/commands"
-link_agent_file "$SCRIPT_DIR/skills/autopilotagent" ~/.agents/skills/autopilotagent "autopilotagent skill → ~/.agents/skills/autopilotagent"
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.agents/skills/$skill "$skill skill → ~/.agents/skills/$skill"
+done
 
 link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.config/opencode/AGENTS.md "AGENTS.md → ~/.config/opencode/AGENTS.md"
 link_agent_file "$SCRIPT_DIR/commands" ~/.config/opencode/autopilotagent/commands "commands/ → ~/.config/opencode/autopilotagent/commands"
-link_agent_file "$SCRIPT_DIR/skills/autopilotagent" ~/.config/opencode/skills/autopilotagent "autopilotagent skill → ~/.config/opencode/skills/autopilotagent"
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.config/opencode/skills/$skill "$skill skill → ~/.config/opencode/skills/$skill"
+done
 
 link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.commandcode/AGENTS.md "AGENTS.md → ~/.commandcode/AGENTS.md"
 link_agent_file "$SCRIPT_DIR/commands" ~/.commandcode/autopilotagent/commands "commands/ → ~/.commandcode/autopilotagent/commands"
-link_agent_file "$SCRIPT_DIR/skills/autopilotagent" ~/.commandcode/skills/autopilotagent "autopilotagent skill → ~/.commandcode/skills/autopilotagent"
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.commandcode/skills/$skill "$skill skill → ~/.commandcode/skills/$skill"
+done
 
-link_agent_file "$SCRIPT_DIR/skills/autopilotagent" ~/.claude/skills/autopilotagent "autopilotagent skill → ~/.claude/skills/autopilotagent"
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.claude/skills/$skill "$skill skill → ~/.claude/skills/$skill"
+done
 
 # Install stop-hook for loop mechanism
 echo ""
