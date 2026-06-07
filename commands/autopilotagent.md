@@ -269,6 +269,31 @@ Read `autopilotagent.json` to get:
 Check for `--start-from ID` flag. If present, extract the START_ID.
 Check for `--batch N` flag. If present, extract the BATCH_COUNT (default: 0 means unlimited).
 
+### Task File Validation
+
+Before proceeding, validate the task file structure. Read the JSON file and check:
+
+1. The top-level object contains a `requirements` array (NOT `tasks`, `items`, or any other name)
+2. Each requirement has the required fields: `id`, `description`, `acceptance`, `tdd`, `passes`
+3. Each `tdd` object has `test`, `implement`, and `refactor` sub-objects
+
+If the file uses wrong field names (e.g. `tasks` instead of `requirements`, `title` instead of `description`, `acceptance_criteria` instead of `acceptance`), stop and tell the user:
+
+```
+Task file has wrong structure: TASKFILE
+
+The file uses incorrect field names. Expected:
+- "requirements" (not "tasks")
+- "description" (not "title")
+- "acceptance" (not "acceptance_criteria")
+- "tdd" with "test"/"implement"/"refactor" sub-objects
+
+Fix: Re-run /tasks on the PRD to regenerate with correct schema,
+or manually rename the fields in the JSON file.
+```
+
+Do NOT attempt to auto-fix the field names — the agent that generated the file should follow the schema exactly.
+
 ### Branch Setup
 
 Derive the feature name from the task file path by taking the basename and stripping the extension (e.g. `docs/autopilotagent/my-feature/my-feature.json` → `my-feature`).

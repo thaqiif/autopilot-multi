@@ -383,10 +383,23 @@ else
     if ! jq -e '.requirements' "$TASKFILE" >/dev/null 2>&1; then
         echo -e "${RED}Error: Task file missing 'requirements' array: $TASKFILE${NC}"
         echo ""
-        echo "Task files must have a 'requirements' array. Example:"
-        echo '  { "requirements": [{ "id": "1", "description": "..." }] }'
-        echo ""
-        echo "Run '/tasks <prd-file.md>' to generate a valid task file."
+        # Check if they used 'tasks' instead of 'requirements'
+        if jq -e '.tasks' "$TASKFILE" >/dev/null 2>&1; then
+            echo -e "${YELLOW}Found 'tasks' array instead of 'requirements'.${NC}"
+            echo "The correct field name is 'requirements', not 'tasks'."
+            echo ""
+            echo "Other common mistakes:"
+            echo "  - 'title' should be 'description'"
+            echo "  - 'acceptance_criteria' should be 'acceptance'"
+            echo "  - 'tdd' object with test/implement/refactor is required"
+            echo ""
+            echo "Fix: Re-run '/tasks <prd-file.md>' to regenerate with correct schema."
+        else
+            echo "Task files must have a 'requirements' array. Example:"
+            echo '  { "requirements": [{ "id": "1", "description": "..." }] }'
+            echo ""
+            echo "Run '/tasks <prd-file.md>' to generate a valid task file."
+        fi
         exit 1
     fi
 fi

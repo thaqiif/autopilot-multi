@@ -90,6 +90,33 @@ Create a mental map of:
 
 Generate the JSON task file with enriched, code-aware information.
 
+### CRITICAL: Exact Schema Required
+
+The output JSON MUST use these EXACT key names. Do NOT rename, abbreviate, or restructure them. The autopilotagent runner validates this structure and will reject files that deviate.
+
+| Required Key | Type | Wrong Names to Avoid |
+|-------------|------|---------------------|
+| `requirements` | array | NOT `tasks`, NOT `items`, NOT `stories` |
+| `requirements[].id` | string | OK |
+| `requirements[].category` | string | NOT `type`, NOT `kind` |
+| `requirements[].description` | string | NOT `title`, NOT `name`, NOT `summary` |
+| `requirements[].acceptance` | array | NOT `acceptance_criteria`, NOT `criteria`, NOT `conditions` |
+| `requirements[].tdd` | object | NOT `test_info`, NOT `testing` |
+| `requirements[].tdd.test` | object | required |
+| `requirements[].tdd.test.description` | string | required |
+| `requirements[].tdd.test.file` | string | required |
+| `requirements[].tdd.test.passes` | boolean | must be `false` |
+| `requirements[].tdd.implement` | object | required |
+| `requirements[].tdd.implement.description` | string | required |
+| `requirements[].tdd.implement.passes` | boolean | must be `false` |
+| `requirements[].tdd.refactor` | object | required |
+| `requirements[].tdd.refactor.description` | string | required |
+| `requirements[].tdd.refactor.passes` | boolean | must be `false` |
+| `requirements[].verification` | array | NOT `checks`, NOT `verify` |
+| `requirements[].passes` | boolean | must be `false` |
+
+The top-level object MUST contain `"requirements": [...]` — not `"tasks": [...]` or anything else.
+
 ### JSON Structure
 
 ```json
@@ -244,7 +271,21 @@ Based on code analysis, infer dependencies between requirements:
 
 ---
 
-## Phase 4: Review and Save
+## Phase 4: Review, Validate, and Save
+
+### 4a. Validate Structure
+
+Before presenting to the user, verify the generated JSON against this checklist:
+
+1. Top-level key is `"requirements"` (NOT `"tasks"`)
+2. Every requirement has: `id`, `category`, `description`, `acceptance`, `tdd`, `verification`, `passes`
+3. Every `tdd` object has: `test` (with `description`, `file`, `passes: false`), `implement` (with `description`, `passes: false`), `refactor` (with `description`, `passes: false`)
+4. Every `acceptance` is an array of strings (not `acceptance_criteria`)
+5. Every `description` is a string (not `title` or `name`)
+
+If any check fails, fix the JSON before proceeding. Do NOT save a file that fails validation.
+
+### 4b. Review with User
 
 1. Present the complete JSON structure to the user
 2. Highlight any requirements marked `already-done` (no implementation needed)

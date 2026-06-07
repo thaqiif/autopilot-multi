@@ -2,6 +2,11 @@
 
 All notable changes to Autopilotagent will be documented in this file.
 
+## 2026-06-07
+
+### Fixed
+- **Task file schema enforcement** - Added explicit field-name mapping table and validation checklist to `commands/tasks.md` to prevent agents from generating non-conforming JSON (e.g. `tasks` instead of `requirements`, `title` instead of `description`, missing `tdd` structure). Agents like CommandCode that don't follow the example JSON closely will now see a clear "CRITICAL: Exact Schema Required" section with wrong-name warnings.
+
 ## 2026-06-02
 
 ### Added
