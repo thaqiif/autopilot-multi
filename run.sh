@@ -615,9 +615,9 @@ print_agent_command() {
             ;;
         cmd)
             if [[ -n "$MODEL" ]]; then
-                echo "  cmd -p \"$prompt\" --yolo --skip-onboarding -t --max-turns 50 --model $MODEL"
+                echo "  cmd -p \"$prompt\" --yolo --skip-onboarding -t --max-turns 50 --verbose --model $MODEL"
             else
-                echo "  cmd -p \"$prompt\" --yolo --skip-onboarding -t --max-turns 50"
+                echo "  cmd -p \"$prompt\" --yolo --skip-onboarding -t --max-turns 50 --verbose"
             fi
             ;;
     esac
@@ -649,10 +649,11 @@ run_agent_background() {
             fi
             ;;
         cmd)
+            # --verbose makes cmd -p stream output in real-time instead of buffering.
             if [[ -n "$MODEL" ]]; then
-                cmd -p "$prompt" --yolo --skip-onboarding -t --max-turns 50 --model "$MODEL" &
+                cmd -p "$prompt" --yolo --skip-onboarding -t --max-turns 50 --verbose --model "$MODEL" &
             else
-                cmd -p "$prompt" --yolo --skip-onboarding -t --max-turns 50 &
+                cmd -p "$prompt" --yolo --skip-onboarding -t --max-turns 50 --verbose &
             fi
             ;;
     esac
