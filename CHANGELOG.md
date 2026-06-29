@@ -2,6 +2,11 @@
 
 All notable changes to Autopilotagent will be documented in this file.
 
+## 2026-06-29
+
+### Added
+- **`claude-*` agent profiles** - `--agent` (and `AUTOPILOTAGENT_AGENT`) now accept any `claude-*` profile name (e.g. `claude-x`, `claude-y`) in addition to `claude`, `codex`, `opencode`, `cmd`. Any `claude-*` value behaves exactly like the default `claude` agent (same slash-command path, same options) — only the launched binary differs, so you can drive autopilot with alternate Claude CLI profiles. Introduced an internal `AGENT_KIND` that normalizes `claude-*` to the `claude` family while keeping the profile name as the binary. Non-claude unknown agents (e.g. `codex-x`) are still rejected. Added test coverage in `tests/run-tests.sh`.
+
 ## 2026-06-07
 
 ### Fixed

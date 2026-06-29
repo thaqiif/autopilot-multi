@@ -14,7 +14,7 @@
 #   --max N         Maximum iterations/command runs (default: 10, command mode only)
 #   --delay N       Seconds to wait between sessions (default: 2)
 #   --timeout N     Idle timeout in seconds before killing session (default: 600)
-#   --agent AGENT   Agent CLI to use: claude, codex, opencode, cmd
+#   --agent AGENT   Agent CLI to use: claude (or any claude-* profile), codex, opencode, cmd
 #   --model MODEL   Model to use when supported by the selected agent
 #   --cleanup       Kill stale agent processes before starting
 #   --dry-run       Show what would be done without executing
@@ -100,7 +100,7 @@ is_supported_agent_process() {
     for token in $cmdline; do
         base=$(basename -- "$token")
         case "$base" in
-            claude)
+            claude|claude-*)
                 return 0
                 ;;
             exec)
@@ -232,7 +232,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --max N         Maximum command runs (default: 10, command mode)"
             echo "  --delay N       Seconds to wait between sessions (default: 2)"
             echo "  --timeout N     Idle timeout in seconds before killing session (default: 600)"
-            echo "  --agent AGENT   Agent CLI: claude, codex, opencode, cmd (default: claude)"
+            echo "  --agent AGENT   Agent CLI: claude (or any claude-* profile), codex, opencode, cmd (default: claude)"
             echo "  --model MODEL   Model to use when supported by the selected agent"
             echo "  --cleanup       Kill stale agent processes before starting"
             echo "  --dry-run       Show what would be done without executing"
@@ -292,19 +292,29 @@ done
 
 # Validate selected agent early. Dry runs render commands without requiring the
 # target agent binary to be installed on this machine.
+#
+# AGENT      = the value the user passed (also the binary name for claude profiles,
+#              e.g. "claude-x", "claude-y").
+# AGENT_KIND = the normalized family that drives behavior. Any "claude-*" profile
+#              normalizes to "claude" so it behaves exactly like the default claude
+#              agent — only the launched binary differs.
 case "$AGENT" in
-    claude|codex|opencode|cmd)
+    claude|claude-*)
+        AGENT_KIND="claude"
+        ;;
+    codex|opencode|cmd)
+        AGENT_KIND="$AGENT"
         ;;
     *)
         echo -e "${RED}Error: Unknown agent: $AGENT${NC}"
-        echo "Supported agents: claude, codex, opencode, cmd"
+        echo "Supported agents: claude (or any claude-* profile), codex, opencode, cmd"
         exit 1
         ;;
 esac
 
 agent_binary() {
-    case "$AGENT" in
-        claude) echo "claude" ;;
+    case "$AGENT_KIND" in
+        claude) echo "$AGENT" ;;
         codex) echo "codex" ;;
         opencode) echo "opencode" ;;
         cmd) echo "cmd" ;;
@@ -542,7 +552,7 @@ CLAUDE_OPTS+=(--)
 build_task_prompt() {
     local autopilotagent_cmd="$1"
 
-    if [[ "$AGENT" == "claude" ]]; then
+    if [[ "$AGENT_KIND" == "claude" ]]; then
         echo "$autopilotagent_cmd"
         return 0
     fi
@@ -570,7 +580,7 @@ EOF
 build_command_prompt() {
     local full_command="$1"
 
-    if [[ "$AGENT" == "claude" ]]; then
+    if [[ "$AGENT_KIND" == "claude" ]]; then
         echo "Run $full_command autonomously. Do not ask for user input - make reasonable choices yourself. When the command completes, output COMPLETE and stop."
         return 0
     fi
@@ -591,9 +601,9 @@ EOF
 print_agent_command() {
     local prompt="$1"
 
-    case "$AGENT" in
+    case "$AGENT_KIND" in
         claude)
-            echo "  claude ${CLAUDE_OPTS[*]} \"$prompt\""
+            echo "  $AGENT ${CLAUDE_OPTS[*]} \"$prompt\""
             ;;
         codex)
             if [[ -n "$MODEL" ]]; then
@@ -626,9 +636,9 @@ print_agent_command() {
 run_agent_background() {
     local prompt="$1"
 
-    case "$AGENT" in
+    case "$AGENT_KIND" in
         claude)
-            claude "${CLAUDE_OPTS[@]}" "$prompt" &
+            "$AGENT" "${CLAUDE_OPTS[@]}" "$prompt" &
             ;;
         codex)
             if [[ -n "$MODEL" ]]; then
@@ -707,7 +717,7 @@ if [[ "$MODE" == "command" ]]; then
             echo -e "${BLUE}Starting ${AGENT} session...${NC}"
             echo ""
 
-            if [[ "$AGENT" == "claude" ]]; then
+            if [[ "$AGENT_KIND" == "claude" ]]; then
                 # Create loop state file to instruct Claude to run command and exit.
                 # Non-Claude agents run as one-shot headless sessions, so they do not
                 # use Claude's stop-hook loop state.

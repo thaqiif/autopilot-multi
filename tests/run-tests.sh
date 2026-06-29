@@ -204,10 +204,25 @@ OUTPUT=$(AUTOPILOTAGENT_AGENT=codex ./run.sh tests/fixtures/incomplete.json --dr
 EXIT_CODE=$?
 test_it "AUTOPILOTAGENT_AGENT: sets default agent" 'output_contains "Agent: codex" && output_contains "codex exec --sandbox workspace-write"'
 
+# Test: a claude-* profile is treated as the claude family but launches that binary
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent claude-x --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--agent claude-x: behaves as claude, launches claude-x binary" 'output_contains "Agent: claude-x" && output_contains "claude-x --allowedTools"'
+
+# Test: another claude-* profile in command mode
+OUTPUT=$(./run.sh /foo --agent claude-y --max 1 --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--agent claude-y: command mode uses claude-y binary" 'output_contains "Agent: claude-y" && output_contains "claude-y --allowedTools"'
+
 # Test: unknown agent shows error
 OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent nope --dry-run 2>&1)
 EXIT_CODE=$?
 test_it "--agent unknown: shows error" 'output_contains "Unknown agent" && exited_with 1'
+
+# Test: a non-claude unknown suffix is still rejected (only claude-* is special)
+OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent codex-x --dry-run 2>&1)
+EXIT_CODE=$?
+test_it "--agent codex-x: shows error (only claude-* is a family)" 'output_contains "Unknown agent" && exited_with 1'
 
 # Test: --model is passed through to non-Claude agents
 OUTPUT=$(./run.sh tests/fixtures/incomplete.json --agent codex --model gpt-5.4 --dry-run 2>&1)
