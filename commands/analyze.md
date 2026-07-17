@@ -1,6 +1,6 @@
 # Analyze
 
-Analyze autopilot session analytics to identify waste patterns and generate improvement suggestions.
+Analyze autopilotagent session analytics to identify waste patterns and generate improvement suggestions.
 
 ## Usage
 
@@ -14,10 +14,10 @@ Analyze autopilot session analytics to identify waste patterns and generate impr
 
 ## Overview
 
-This command reads session analytics files from `docs/autopilot/*/analytics/` and generates:
+This command reads session analytics files from `docs/autopilotagent/*/analytics/` and generates:
 - Efficiency scores (productive vs wasted iterations)
 - Detected waste patterns (thrashing, environment issues, etc.)
-- Suggested improvements for AGENTS.md and autopilot.json
+- Suggested improvements for AGENTS.md and autopilotagent.json
 - Per-requirement breakdown of iterations and status
 
 ## Execution Steps
@@ -32,7 +32,7 @@ Extract from $ARGUMENTS:
 
 ### 2. Load Analytics Files
 
-1. Read analytics directory from `autopilot.json` (default: `docs/autopilot/*/analytics/`)
+1. Read analytics directory from `autopilotagent.json` (default: `docs/autopilotagent/*/analytics/`)
 2. List all `*.json` files in the directory
 3. Apply filters based on arguments:
    - `--last`: Sort by date, take most recent
@@ -71,7 +71,7 @@ Analyze aggregated data for common waste patterns:
 
 **Environment Issues**
 - Look for: `ECONNREFUSED`, `ETIMEOUT`, `Permission denied`, `sandbox`
-- Suggested fix: Update sandbox settings in autopilot.json
+- Suggested fix: Update sandbox settings in autopilotagent.json
 
 **Thrashing**
 - Look for: `thrashing.detected: true` in any requirement
@@ -109,7 +109,7 @@ Breakdown waste by category:
 Output a markdown report to console:
 
 ```markdown
-# Autopilot Analysis Report
+# Autopilotagent Analysis Report
 
 Generated: [ISO8601 timestamp]
 Sessions analyzed: N
@@ -144,7 +144,7 @@ Based on N iterations across M sessions:
 - YYYY-MM-DD: Description of learning
 ```
 
-**Suggested autopilot.json change** (if applicable):
+**Suggested autopilotagent.json change** (if applicable):
 ```json
 {
   "key": "value"
@@ -169,7 +169,7 @@ Based on N iterations across M sessions:
 
 1. Review suggestions above
 2. Apply relevant changes to AGENTS.md
-3. Update autopilot.json if needed
+3. Update autopilotagent.json if needed
 4. Run `/analyze --clear` to delete processed analytics files
 ```
 
@@ -182,12 +182,12 @@ If `--clear` was specified:
 
 ## Error Handling
 
-- **No analytics files**: Output message suggesting running autopilot first
+- **No analytics files**: Output message suggesting running autopilotagent first
 - **Invalid JSON**: Skip file, log warning, continue with others
 - **Empty directory**: Output message that no sessions to analyze
 
 ## Notes
 
-- This command only reads and reports; it never modifies AGENTS.md or autopilot.json
+- This command only reads and reports; it never modifies AGENTS.md or autopilotagent.json
 - Suggestions are formatted for easy copy-paste into the appropriate files
 - Delete analytics files after applying learnings to avoid re-analyzing old data

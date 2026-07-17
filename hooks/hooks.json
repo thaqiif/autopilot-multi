@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Autopilot hooks configuration for Claude Code",
+  "description": "Autopilotagent hooks configuration for Claude Code",
   "hooks": {
     "stop": [
       {
-        "command": ".autopilot/hooks/stop-hook.sh",
-        "description": "Autopilot loop mechanism - intercepts exit to enable TDD iteration"
+        "command": ".autopilotagent/hooks/stop-hook.sh",
+        "description": "Autopilotagent loop mechanism - intercepts exit to enable TDD iteration"
       }
     ]
   }

@@ -1,8 +1,8 @@
-# Autopilot Improvements Inspired by Ralph Playbook
+# Autopilotagent Improvements Inspired by Ralph Playbook
 
 > Analysis Date: 2026-01-10
 >
-> This document captures improvement ideas for the Autopilot project based on patterns, approaches, and examples found in Geoffrey Huntley's Ralph Playbook.
+> This document captures improvement ideas for the Autopilotagent project based on patterns, approaches, and examples found in Geoffrey Huntley's Ralph Playbook.
 
 ---
 
@@ -15,15 +15,15 @@ The following suggestions have been implemented by enhancing `/tasks` with codeb
 | 1 | Separate Plan and Build Prompts | **Alternative approach:** Integrated planning into `/tasks` instead of separate prompts. `/tasks` now performs codebase analysis before generating tasks. |
 | 4 | Gap Analysis Before Implementation | `/tasks` Phase 0-1 now searches codebase, identifies existing code, and categorizes each requirement as `create`/`extend`/`modify`/`already-done`. |
 | 5 | "Don't Assume Not Implemented" | Built into `/tasks` Phase 1 with explicit "Critical Rule: Don't assume something isn't implemented. Always search first." |
-| 6 | Guardrail Numbering Convention | `autopilot.md` restructured with Phase 0 (pre-flight), Phase 1 (execution), Phase 99999+ (critical guardrails). |
+| 6 | Guardrail Numbering Convention | `autopilotagent.md` restructured with Phase 0 (pre-flight), Phase 1 (execution), Phase 99999+ (critical guardrails). |
 | 7 | Subagent Parallelization Strategy | Added Subagent Parallelization section to `CLAUDE.md` with table of parallel vs sequential tasks. |
 | 16 | Operational AGENTS.md Discipline | Trimmed AGENTS.md from 112 to 63 lines. Removed Learnings section (progress tracker). Added note to use notes file for learnings. |
 | 18 | Acceptance-Driven Test Requirements | Added `acceptance` array to requirements. TDD Red phase writes tests covering all acceptance criteria. |
 | 19 | Graceful Plan Regeneration | `/tasks --refresh` flag re-analyzes incomplete requirements while preserving completed ones. |
 | 22 | Prompt Language Patterns | Added Language Patterns section to `CLAUDE.md` with proven phrasings. |
-| 23 | Explicit Phase Numbering | `/tasks` and `autopilot.md` now use explicit phase numbering (0a, 0b, 0c for orientation; 99999+ for guardrails). |
-| 24 | Single Source of Truth | Added as guardrail 999999999 in `autopilot.md` and in `AGENTS.md` Guardrails section. |
-| 25 | No Placeholders | Added as guardrail 99999999 in `autopilot.md` and in `AGENTS.md` Guardrails section. |
+| 23 | Explicit Phase Numbering | `/tasks` and `autopilotagent.md` now use explicit phase numbering (0a, 0b, 0c for orientation; 99999+ for guardrails). |
+| 24 | Single Source of Truth | Added as guardrail 999999999 in `autopilotagent.md` and in `AGENTS.md` Guardrails section. |
+| 25 | No Placeholders | Added as guardrail 99999999 in `autopilotagent.md` and in `AGENTS.md` Guardrails section. |
 
 **New files created:**
 - `tasks.schema.json` - JSON Schema for task files with `codeAnalysis` field
@@ -36,7 +36,7 @@ The following suggestions have been implemented by enhancing `/tasks` with codeb
 
 **Status:** Implemented via enhanced `/tasks` command.
 
-**Original idea:** Split autopilot.md into PROMPT_plan.md and PROMPT_build.md.
+**Original idea:** Split autopilotagent.md into PROMPT_plan.md and PROMPT_build.md.
 
 **What we did instead:** Integrated gap analysis and codebase exploration into `/tasks` itself. This keeps the existing command structure while adding Ralph's planning intelligence at task generation time.
 
@@ -55,7 +55,7 @@ The following suggestions have been implemented by enhancing `/tasks` with codeb
 **Purpose:** Ralph emphasizes that the plan is disposable - when it goes stale or Ralph goes off-track, simply delete and regenerate. This is more flexible than the current JSON task file approach.
 
 **Details:**
-- Current autopilot uses rigid JSON with `passes`, `stuck`, `tdd` phases
+- Current autopilotagent uses rigid JSON with `passes`, `stuck`, `tdd` phases
 - Ralph's plan is freeform markdown that Ralph itself structures
 - Plan regeneration costs only one loop iteration
 - Criteria for regeneration:
@@ -66,8 +66,8 @@ The following suggestions have been implemented by enhancing `/tasks` with codeb
 - JSON stays as source of truth for requirements; plan becomes tactical execution artifact
 
 **Implementation:**
-- Add `/autopilot replan` or `/autopilot tasks.json --replan` mode
-- Generate `docs/autopilot/*-plan.md` alongside existing files
+- Add `/autopilotagent replan` or `/autopilotagent tasks.json --replan` mode
+- Generate `docs/autopilotagent/*-plan.md` alongside existing files
 - Plan can be more detailed than JSON requirements (subtasks, discoveries, blockers)
 - Consider hybrid: JSON for tracking status, markdown plan for execution guidance
 
@@ -87,8 +87,8 @@ The following suggestions have been implemented by enhancing `/tasks` with codeb
 - Better for monorepo/multi-package projects where topics cross packages
 
 **Implementation:**
-- Add `specs/` as alternative input to `/autopilot`
-- `/autopilot specs/` runs gap analysis across all spec files
+- Add `specs/` as alternative input to `/autopilotagent`
+- `/autopilotagent specs/` runs gap analysis across all spec files
 - `/tasks` could output to `specs/` with one JSON per spec
 - Consider spec templates for common patterns (API endpoint, UI component, background job)
 
@@ -121,9 +121,9 @@ See "Implemented" section above. The `/tasks` command now includes:
 
 ## 6. ~~Guardrail Numbering Convention~~ (Implemented)
 
-**Status:** Implemented in `autopilot.md`.
+**Status:** Implemented in `autopilotagent.md`.
 
-`autopilot.md` now has:
+`autopilotagent.md` now has:
 - **Phase 0**: Pre-flight (0a. Configuration Check, 0b. Argument Parsing, 0c. Mode Detection)
 - **Phase 1**: Mode Execution
 - **Phase 99999+**: Critical Guardrails with escalating priority:
@@ -159,7 +159,7 @@ Added Subagent Parallelization section documenting:
 - Not for routine operations (too expensive)
 
 **Implementation:**
-- Add to autopilot.md at key decision points: "Ultrathink: What is the highest-priority task?"
+- Add to autopilotagent.md at key decision points: "Ultrathink: What is the highest-priority task?"
 - Document in AGENTS.md as recognized trigger
 - Consider adding `--ultrathink` flag for verbose reasoning mode
 
@@ -217,8 +217,8 @@ Added Subagent Parallelization section documenting:
 - Works with existing git tag infrastructure
 
 **Implementation:**
-- Add `--tag` option to autopilot that creates git tag after each requirement
-- Naming convention: `autopilot/feature-name/v0.0.1`
+- Add `--tag` option to autopilotagent that creates git tag after each requirement
+- Naming convention: `autopilotagent/feature-name/v0.0.1`
 - Consider auto-increment logic based on TDD phase (patch for green, minor for refactor)
 - Update rollback mode to use version tags
 
@@ -261,8 +261,8 @@ Added Subagent Parallelization section documenting:
 - Cleaner git history with focused branches
 
 **Implementation:**
-- Add `--scope "description"` flag to `/autopilot`
-- Generate branch-specific plan: `docs/autopilot/feature-branch-plan.md`
+- Add `--scope "description"` flag to `/autopilotagent`
+- Generate branch-specific plan: `docs/autopilotagent/feature-branch-plan.md`
 - Filter task JSON to scoped subset before execution
 - Support `--branch` flag that creates git branch + scoped plan
 
@@ -303,8 +303,8 @@ Added Subagent Parallelization section documenting:
 
 **Implementation:**
 - Add `docs/sandbox-environments.md` with comparison table
-- Document sandbox configuration in autopilot.json schema
-- Add sandbox verification to `/autopilot init`
+- Document sandbox configuration in autopilotagent.json schema
+- Add sandbox verification to `/autopilotagent init`
 - Include sandbox recommendations in README
 
 ---
@@ -344,7 +344,7 @@ Trimmed AGENTS.md from 112 lines to 63 lines:
 
 ## 18. ~~Acceptance-Driven Test Requirements~~ (Implemented)
 
-**Status:** Implemented in `tasks.schema.json`, `tasks.md`, and `autopilot.md`.
+**Status:** Implemented in `tasks.schema.json`, `tasks.md`, and `autopilotagent.md`.
 
 Added `acceptance` array to requirements:
 - Each criterion is a specific, testable outcome
@@ -360,7 +360,7 @@ Example:
 ]
 ```
 
-Updated `autopilot.md` TDD Rules section with "Acceptance-Driven Testing" subsection explaining how criteria map to tests.
+Updated `autopilotagent.md` TDD Rules section with "Acceptance-Driven Testing" subsection explaining how criteria map to tests.
 
 ---
 
@@ -371,7 +371,7 @@ Updated `autopilot.md` TDD Rules section with "Acceptance-Driven Testing" subsec
 See "Implemented" section above. Usage:
 
 ```bash
-/tasks docs/autopilot/feature.json --refresh
+/tasks docs/autopilotagent/feature.json --refresh
 ```
 
 **Refresh behavior:**
@@ -407,7 +407,7 @@ See "Implemented" section above. Usage:
 
 **Description:** Add progress visualization and statistics to the loop wrapper.
 
-**Purpose:** Ralph's loop.sh provides iteration counts and status. Autopilot's run.sh could be more informative.
+**Purpose:** Ralph's loop.sh provides iteration counts and status. Autopilotagent's run.sh could be more informative.
 
 **Details:**
 - Current run.sh shows colorized output but limited statistics
@@ -451,15 +451,15 @@ See "Implemented" section above. The `/tasks` command now uses:
 - Phase 3: Dependency Inference - auto-detect dependencies
 - Phase 4: Review and Save - user confirmation
 
-**Future:** Apply same structure to `autopilot.md` (Phase 99999+ guardrails).
+**Future:** Apply same structure to `autopilotagent.md` (Phase 99999+ guardrails).
 
 ---
 
 ## 24. ~~Single Source of Truth Guardrail~~ (Implemented)
 
-**Status:** Implemented in `autopilot.md` and `AGENTS.md`.
+**Status:** Implemented in `autopilotagent.md` and `AGENTS.md`.
 
-Added as guardrail 999999999 in `autopilot.md` Phase 99999 section:
+Added as guardrail 999999999 in `autopilotagent.md` Phase 99999 section:
 - Search for existing equivalent functionality before creating new code
 - Prefer extending over creating parallel implementations
 - Consolidate duplicates discovered during refactor
@@ -471,9 +471,9 @@ Also added to `AGENTS.md` Guardrails section for cross-project visibility.
 
 ## 25. ~~Complete Implementation Guardrail~~ (Implemented)
 
-**Status:** Implemented in `autopilot.md` and `AGENTS.md`.
+**Status:** Implemented in `autopilotagent.md` and `AGENTS.md`.
 
-Added as guardrail 99999999 in `autopilot.md` Phase 99999 section:
+Added as guardrail 99999999 in `autopilotagent.md` Phase 99999 section:
 - No TODO/FIXME comments in committed code
 - No placeholder functions or stub implementations
 - No partial implementations with "will fix later"
@@ -496,7 +496,7 @@ Also added to `AGENTS.md` Guardrails section for cross-project visibility.
 ## Next Steps
 
 1. ~~Implement gap analysis in /tasks~~ Done
-2. ~~Apply phase numbering and guardrails to autopilot.md~~ Done
+2. ~~Apply phase numbering and guardrails to autopilotagent.md~~ Done
 3. ~~Implement acceptance-driven test requirements~~ Done
 4. Test the enhanced `/tasks` command on a real project
 5. Consider implementing medium-priority items (2, 7, 8, 10, 16, 22)
@@ -504,5 +504,5 @@ Also added to `AGENTS.md` Guardrails section for cross-project visibility.
 ---
 
 *Generated from analysis of:*
-- `/home/joe/Sites/autopilot` - Current autopilot implementation
+- `/home/joe/Sites/autopilotagent` - Current autopilotagent implementation
 - `/home/joe/Sites/ralph-playbook` - Geoffrey Huntley's Ralph Playbook

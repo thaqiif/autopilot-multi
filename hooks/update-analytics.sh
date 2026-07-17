@@ -81,15 +81,15 @@ files_changed_between() {
 }
 
 # --- Pre-compute tag order ---
-# Sort all autopilot/req-*/start tags by creation time so we can
+# Sort all autopilotagent/req-*/start tags by creation time so we can
 # determine the correct upper bound (next tag) for each requirement.
 
 declare -A TAG_UPPER_BOUND
 
 build_tag_order() {
     local tag_list
-    # Get all autopilot req tags sorted by creation time (oldest first)
-    tag_list=$(git for-each-ref --sort=creatordate --format='%(refname:short)' 'refs/tags/autopilot/req-*/start' 2>/dev/null || true)
+    # Get all autopilotagent req tags sorted by creation time (oldest first)
+    tag_list=$(git for-each-ref --sort=creatordate --format='%(refname:short)' 'refs/tags/autopilotagent/req-*/start' 2>/dev/null || true)
 
     if [[ -z "$tag_list" ]]; then
         return
@@ -151,7 +151,7 @@ build_requirements() {
         fi
 
         # Check for git tag to get startedAt
-        local start_tag="autopilot/req-${req_id}/start"
+        local start_tag="autopilotagent/req-${req_id}/start"
         local started_at="null"
         local iterations=0
         local files_written="[]"

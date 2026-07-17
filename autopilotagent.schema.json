@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/autopilot.schema.json",
-  "title": "Autopilot Configuration",
-  "description": "Configuration file for Autopilot - autonomous TDD development with Claude Code",
+  "$id": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/autopilotagent.schema.json",
+  "title": "Autopilotagent Configuration",
+  "description": "Configuration file for Autopilotagent - autonomous TDD development with Claude Code",
   "type": "object",
   "required": ["version", "project", "feedbackLoops", "iterations"],
   "properties": {
@@ -211,7 +211,7 @@
     },
     "baseline": {
       "type": "object",
-      "description": "Pre-existing failures to ignore during autopilot runs. Capture these at session start to avoid blocking on issues unrelated to current work.",
+      "description": "Pre-existing failures to ignore during autopilotagent runs. Capture these at session start to avoid blocking on issues unrelated to current work.",
       "properties": {
         "typecheck": {
           "type": "object",
@@ -318,7 +318,7 @@
     },
     "metrics": {
       "type": "object",
-      "description": "Metrics tracking configuration for analyzing autopilot effectiveness",
+      "description": "Metrics tracking configuration for analyzing autopilotagent effectiveness",
       "properties": {
         "enabled": {
           "type": "boolean",
@@ -327,7 +327,7 @@
         },
         "file": {
           "type": ["string", "null"],
-          "default": "docs/autopilot/autopilot-metrics.json",
+          "default": "docs/autopilotagent/autopilotagent-metrics.json",
           "description": "File path for storing metrics data"
         }
       }
@@ -343,7 +343,7 @@
         },
         "directory": {
           "type": "string",
-          "default": "docs/autopilot/analytics",
+          "default": "docs/autopilotagent/analytics",
           "description": "Directory for storing session analytics files"
         },
         "thrashingThreshold": {
@@ -450,7 +450,7 @@
     },
     "notifications": {
       "type": "object",
-      "description": "Notification settings for when autopilot completes",
+      "description": "Notification settings for when autopilotagent completes",
       "properties": {
         "enabled": {
           "type": "boolean",
@@ -459,7 +459,7 @@
         },
         "command": {
           "type": ["string", "null"],
-          "description": "Shell command to run on completion. Receives JSON with results via stdin. E.g., 'notify-send \"Autopilot\" \"$1\"' or 'say \"Autopilot complete\"'"
+          "description": "Shell command to run on completion. Receives JSON with results via stdin. E.g., 'notify-send \"Autopilotagent\" \"$1\"' or 'say \"Autopilotagent complete\"'"
         },
         "webhook": {
           "type": ["string", "null"],

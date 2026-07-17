@@ -1,20 +1,20 @@
 #!/bin/bash
 
-# Autopilot Install Script
-# Creates symlinks from this repo to ~/.claude/
+# Autopilotagent Install Script
+# Creates symlinks from this repo to supported agent config directories.
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "Installing Autopilot commands..."
+echo "Installing Autopilotagent commands..."
 
 # Create directories if they don't exist
 mkdir -p ~/.claude/commands
 mkdir -p ~/.claude/hooks
 
 # Symlink command files
-for cmd in prd.md tasks.md autopilot.md autopilot:init.md analyze.md; do
+for cmd in prd.md tasks.md autopilotagent.md autopilotagent:init.md analyze.md cancel.md stop.md; do
     if [ -L ~/.claude/commands/$cmd ]; then
         rm ~/.claude/commands/$cmd
     elif [ -f ~/.claude/commands/$cmd ]; then
@@ -35,19 +35,65 @@ fi
 ln -s "$SCRIPT_DIR/AGENTS.md" ~/.claude/AGENTS.md
 echo "  Linked: AGENTS.md"
 
+# Install shared instructions/specs and skills for non-Claude agents. These
+# agents do not consume Claude slash-command files directly, but run.sh points
+# them at these specs during headless execution.
+echo ""
+echo "Installing shared instructions for Codex, OpenCode, and Command Code..."
+
+link_agent_file() {
+    local source="$1"
+    local target="$2"
+    local label="$3"
+
+    mkdir -p "$(dirname "$target")"
+    if [ -L "$target" ]; then
+        rm "$target"
+    elif [ -f "$target" ] || [ -d "$target" ]; then
+        echo "Backing up existing $target to $target.bak"
+        mv "$target" "$target.bak"
+    fi
+    ln -s "$source" "$target"
+    echo "  Linked: $label"
+}
+
+SKILLS="autopilotagent prd tasks analyze autopilotagent-init cancel stop"
+
+link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.codex/AGENTS.md "AGENTS.md → ~/.codex/AGENTS.md"
+link_agent_file "$SCRIPT_DIR/commands" ~/.codex/autopilotagent/commands "commands/ → ~/.codex/autopilotagent/commands"
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.agents/skills/$skill "$skill skill → ~/.agents/skills/$skill"
+done
+
+link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.config/opencode/AGENTS.md "AGENTS.md → ~/.config/opencode/AGENTS.md"
+link_agent_file "$SCRIPT_DIR/commands" ~/.config/opencode/autopilotagent/commands "commands/ → ~/.config/opencode/autopilotagent/commands"
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.config/opencode/skills/$skill "$skill skill → ~/.config/opencode/skills/$skill"
+done
+
+link_agent_file "$SCRIPT_DIR/AGENTS.md" ~/.commandcode/AGENTS.md "AGENTS.md → ~/.commandcode/AGENTS.md"
+link_agent_file "$SCRIPT_DIR/commands" ~/.commandcode/autopilotagent/commands "commands/ → ~/.commandcode/autopilotagent/commands"
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.commandcode/skills/$skill "$skill skill → ~/.commandcode/skills/$skill"
+done
+
+for skill in $SKILLS; do
+    link_agent_file "$SCRIPT_DIR/skills/$skill" ~/.claude/skills/$skill "$skill skill → ~/.claude/skills/$skill"
+done
+
 # Install stop-hook for loop mechanism
 echo ""
 echo "Installing loop hooks..."
 
-if [ -L ~/.claude/hooks/autopilot-stop-hook.sh ]; then
-    rm ~/.claude/hooks/autopilot-stop-hook.sh
-elif [ -f ~/.claude/hooks/autopilot-stop-hook.sh ]; then
-    echo "Backing up existing autopilot-stop-hook.sh"
-    mv ~/.claude/hooks/autopilot-stop-hook.sh ~/.claude/hooks/autopilot-stop-hook.sh.bak
+if [ -L ~/.claude/hooks/autopilotagent-stop-hook.sh ]; then
+    rm ~/.claude/hooks/autopilotagent-stop-hook.sh
+elif [ -f ~/.claude/hooks/autopilotagent-stop-hook.sh ]; then
+    echo "Backing up existing autopilotagent-stop-hook.sh"
+    mv ~/.claude/hooks/autopilotagent-stop-hook.sh ~/.claude/hooks/autopilotagent-stop-hook.sh.bak
 fi
-ln -s "$SCRIPT_DIR/hooks/stop-hook.sh" ~/.claude/hooks/autopilot-stop-hook.sh
-chmod +x ~/.claude/hooks/autopilot-stop-hook.sh
-echo "  Linked: stop-hook.sh → ~/.claude/hooks/autopilot-stop-hook.sh"
+ln -s "$SCRIPT_DIR/hooks/stop-hook.sh" ~/.claude/hooks/autopilotagent-stop-hook.sh
+chmod +x ~/.claude/hooks/autopilotagent-stop-hook.sh
+echo "  Linked: stop-hook.sh → ~/.claude/hooks/autopilotagent-stop-hook.sh"
 
 # Symlink git-commit mutex for parallel agent support
 if [ -L ~/.claude/hooks/git-commit ]; then
@@ -63,50 +109,56 @@ echo "  Linked: git-commit → ~/.claude/hooks/git-commit"
 # Check if hooks.json exists and update it
 HOOKS_JSON=~/.claude/hooks.json
 if [ -f "$HOOKS_JSON" ]; then
-    # Check if autopilot hook is already configured
-    if grep -q "autopilot-stop-hook" "$HOOKS_JSON" 2>/dev/null; then
+    # Check if autopilotagent hook is already configured
+    if grep -q "autopilotagent-stop-hook" "$HOOKS_JSON" 2>/dev/null; then
         echo "  Hooks already configured in $HOOKS_JSON"
+    elif command -v jq &>/dev/null; then
+        # Merge autopilotagent stop-hook into existing hooks.json, preserving other entries
+        TEMP_HOOKS=$(mktemp)
+        jq '.hooks.stop += [{"command": "~/.claude/hooks/autopilotagent-stop-hook.sh", "description": "Autopilotagent loop mechanism"}] | .hooks.stop |= unique_by(.command)' \
+            "$HOOKS_JSON" > "$TEMP_HOOKS" && mv "$TEMP_HOOKS" "$HOOKS_JSON"
+        echo "  Merged autopilotagent stop-hook into $HOOKS_JSON"
     else
-        echo "  Note: Add autopilot stop-hook to your $HOOKS_JSON manually:"
-        echo '    "stop": [{"command": "~/.claude/hooks/autopilot-stop-hook.sh"}]'
+        echo "  Note: Add autopilotagent stop-hook to your $HOOKS_JSON manually:"
+        echo '    "stop": [{"command": "~/.claude/hooks/autopilotagent-stop-hook.sh"}]'
     fi
 else
-    # Create hooks.json with autopilot hook
+    # Create hooks.json with autopilotagent hook
     cat > "$HOOKS_JSON" << 'HOOKEOF'
 {
   "hooks": {
     "stop": [
       {
-        "command": "~/.claude/hooks/autopilot-stop-hook.sh",
-        "description": "Autopilot loop mechanism"
+        "command": "~/.claude/hooks/autopilotagent-stop-hook.sh",
+        "description": "Autopilotagent loop mechanism"
       }
     ]
   }
 }
 HOOKEOF
-    echo "  Created: $HOOKS_JSON with autopilot stop-hook"
+    echo "  Created: $HOOKS_JSON with autopilotagent stop-hook"
 fi
 
-# Symlink run.sh to ~/.local/bin/autopilot
+# Symlink run.sh to ~/.local/bin/autopilotagent
 mkdir -p ~/.local/bin
-if [ -L ~/.local/bin/autopilot ]; then
-    rm ~/.local/bin/autopilot
-elif [ -f ~/.local/bin/autopilot ]; then
-    echo "Backing up existing ~/.local/bin/autopilot to autopilot.bak"
-    mv ~/.local/bin/autopilot ~/.local/bin/autopilot.bak
+if [ -L ~/.local/bin/autopilotagent ]; then
+    rm ~/.local/bin/autopilotagent
+elif [ -f ~/.local/bin/autopilotagent ]; then
+    echo "Backing up existing ~/.local/bin/autopilotagent to autopilotagent.bak"
+    mv ~/.local/bin/autopilotagent ~/.local/bin/autopilotagent.bak
 fi
-ln -s "$SCRIPT_DIR/run.sh" ~/.local/bin/autopilot
-echo "  Linked: run.sh → ~/.local/bin/autopilot"
+ln -s "$SCRIPT_DIR/run.sh" ~/.local/bin/autopilotagent
+echo "  Linked: run.sh → ~/.local/bin/autopilotagent"
 
 # Symlink cleanup.sh
-if [ -L ~/.local/bin/autopilot-cleanup ]; then
-    rm ~/.local/bin/autopilot-cleanup
-elif [ -f ~/.local/bin/autopilot-cleanup ]; then
-    echo "Backing up existing ~/.local/bin/autopilot-cleanup to autopilot-cleanup.bak"
-    mv ~/.local/bin/autopilot-cleanup ~/.local/bin/autopilot-cleanup.bak
+if [ -L ~/.local/bin/autopilotagent-cleanup ]; then
+    rm ~/.local/bin/autopilotagent-cleanup
+elif [ -f ~/.local/bin/autopilotagent-cleanup ]; then
+    echo "Backing up existing ~/.local/bin/autopilotagent-cleanup to autopilotagent-cleanup.bak"
+    mv ~/.local/bin/autopilotagent-cleanup ~/.local/bin/autopilotagent-cleanup.bak
 fi
-ln -s "$SCRIPT_DIR/cleanup.sh" ~/.local/bin/autopilot-cleanup
-echo "  Linked: cleanup.sh → ~/.local/bin/autopilot-cleanup"
+ln -s "$SCRIPT_DIR/cleanup.sh" ~/.local/bin/autopilotagent-cleanup
+echo "  Linked: cleanup.sh → ~/.local/bin/autopilotagent-cleanup"
 
 echo ""
 echo "Installation complete!"
@@ -114,20 +166,25 @@ echo ""
 echo "Commands available:"
 echo "  /prd               - Create a PRD (inside Claude)"
 echo "  /tasks             - Convert PRD to tasks (inside Claude)"
-echo "  /autopilot         - Run TDD execution (inside Claude)"
-echo "  /autopilot init    - Initialize project configuration (inside Claude)"
-echo "  /autopilot stop    - Stop run.sh wrapper gracefully (inside Claude)"
-echo "  /autopilot cancel  - Cancel hook-based loop (inside Claude)"
-echo "  /autopilot analyze - Analyze session analytics (inside Claude)"
+echo "  /autopilotagent         - Run TDD execution (inside Claude)"
+echo "  /autopilotagent init    - Initialize project configuration (inside Claude)"
+echo "  /autopilotagent stop    - Stop run.sh wrapper gracefully (inside Claude)"
+echo "  /autopilotagent cancel  - Cancel hook-based loop (inside Claude)"
+echo "  /autopilotagent analyze - Analyze session analytics (inside Claude)"
 echo ""
-echo "  autopilot       - Token-frugal wrapper (from terminal)"
-echo "  autopilot-cleanup - Kill orphaned Claude processes (from terminal)"
+echo "  autopilotagent       - Token-frugal wrapper (from terminal)"
+echo "  autopilotagent-cleanup - Kill orphaned Claude processes (from terminal)"
+echo ""
+echo "Agents supported: claude (or any claude-* profile), codex, opencode, cmd"
 echo ""
 echo "Usage:"
-echo "  autopilot docs/autopilot/feature/feature.json    # Fresh context per requirement"
-echo "  autopilot tasks.json --batch 3            # 3 requirements per session"
+echo "  autopilotagent docs/autopilotagent/feature/feature.json    # Fresh context per requirement"
+echo "  autopilotagent tasks.json --batch 3            # 3 requirements per session"
+echo "  autopilotagent tasks.json --agent codex        # Use Codex CLI"
+echo "  autopilotagent tasks.json --agent opencode     # Use OpenCode CLI"
+echo "  autopilotagent tasks.json --agent cmd          # Use Command Code CLI"
 echo ""
-echo "Run '/autopilot init' in your project to set up configuration."
+echo "Run '/autopilotagent init' in your project to set up configuration."
 echo ""
 echo "Note: Ensure ~/.local/bin is in your PATH. Add to ~/.bashrc or ~/.zshrc:"
 echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/tasks.schema.json",
-  "title": "Autopilot Tasks File",
-  "description": "Machine-readable task file for TDD execution with autopilot",
+  "$id": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/tasks.schema.json",
+  "title": "Autopilotagent Tasks File",
+  "description": "Machine-readable task file for TDD execution with autopilotagent",
   "type": "object",
   "required": ["name", "description", "requirements"],
   "properties": {

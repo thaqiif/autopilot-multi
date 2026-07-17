@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# git-commit — Serializes git commits across parallel autopilot instances.
+# git-commit — Serializes git commits across parallel autopilotagent instances.
 #
 # Usage: hooks/git-commit [git commit args...]
 #
@@ -12,12 +12,12 @@
 
 set -euo pipefail
 
-LOCK_DIR=".autopilot/commit-lock"
+LOCK_DIR=".autopilotagent/commit-lock"
 MAX_WAIT=60
 waited=0
 
-# Ensure .autopilot dir exists before attempting to create the lock inside it
-mkdir -p .autopilot
+# Ensure .autopilotagent dir exists before attempting to create the lock inside it
+mkdir -p .autopilotagent
 
 # Acquire lock (mkdir is atomic on POSIX filesystems)
 while ! mkdir "$LOCK_DIR" 2>/dev/null; do
@@ -25,14 +25,14 @@ while ! mkdir "$LOCK_DIR" 2>/dev/null; do
     if [[ -f "$LOCK_DIR/pid" ]]; then
         lock_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
         if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
-            echo "autopilot: removing stale commit lock (PID $lock_pid no longer running)" >&2
+            echo "autopilotagent: removing stale commit lock (PID $lock_pid no longer running)" >&2
             rm -rf "$LOCK_DIR"
             continue
         fi
     fi
 
     if [[ $waited -ge $MAX_WAIT ]]; then
-        echo "autopilot: timed out waiting for commit lock after ${MAX_WAIT}s" >&2
+        echo "autopilotagent: timed out waiting for commit lock after ${MAX_WAIT}s" >&2
         exit 1
     fi
     sleep 1

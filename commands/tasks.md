@@ -2,19 +2,19 @@
 
 ## Goal
 
-Convert an approved human-readable PRD into a machine-readable JSON task file that autopilot can execute autonomously using Test-Driven Development. **Before generating tasks, analyze the codebase to understand what exists, identify patterns, and scope implementation accurately.**
+Convert an approved human-readable PRD into a machine-readable JSON task file that autopilotagent can execute autonomously using Test-Driven Development. **Before generating tasks, analyze the codebase to understand what exists, identify patterns, and scope implementation accurately.**
 
 ## TDD Workflow
 
-For each requirement, autopilot will:
+For each requirement, autopilotagent will:
 1. **Red** - Write a failing test that defines the expected behavior
 2. **Green** - Write minimal code to make the test pass
 3. **Refactor** - Clean up while keeping tests green
 
 ## Input
 
-- **New tasks:** `/tasks docs/autopilot/feature-name.md`
-- **Refresh existing:** `/tasks docs/autopilot/feature-name.json --refresh`
+- **New tasks:** `/tasks docs/autopilotagent/feature-name.md`
+- **Refresh existing:** `/tasks docs/autopilotagent/feature-name.json --refresh`
 
 ## Output
 
@@ -89,6 +89,33 @@ Create a mental map of:
 ## Phase 2: Task Generation
 
 Generate the JSON task file with enriched, code-aware information.
+
+### CRITICAL: Exact Schema Required
+
+The output JSON MUST use these EXACT key names. Do NOT rename, abbreviate, or restructure them. The autopilotagent runner validates this structure and will reject files that deviate.
+
+| Required Key | Type | Wrong Names to Avoid |
+|-------------|------|---------------------|
+| `requirements` | array | NOT `tasks`, NOT `items`, NOT `stories` |
+| `requirements[].id` | string | OK |
+| `requirements[].category` | string | NOT `type`, NOT `kind` |
+| `requirements[].description` | string | NOT `title`, NOT `name`, NOT `summary` |
+| `requirements[].acceptance` | array | NOT `acceptance_criteria`, NOT `criteria`, NOT `conditions` |
+| `requirements[].tdd` | object | NOT `test_info`, NOT `testing` |
+| `requirements[].tdd.test` | object | required |
+| `requirements[].tdd.test.description` | string | required |
+| `requirements[].tdd.test.file` | string | required |
+| `requirements[].tdd.test.passes` | boolean | must be `false` |
+| `requirements[].tdd.implement` | object | required |
+| `requirements[].tdd.implement.description` | string | required |
+| `requirements[].tdd.implement.passes` | boolean | must be `false` |
+| `requirements[].tdd.refactor` | object | required |
+| `requirements[].tdd.refactor.description` | string | required |
+| `requirements[].tdd.refactor.passes` | boolean | must be `false` |
+| `requirements[].verification` | array | NOT `checks`, NOT `verify` |
+| `requirements[].passes` | boolean | must be `false` |
+
+The top-level object MUST contain `"requirements": [...]` — not `"tasks": [...]` or anything else.
 
 ### JSON Structure
 
@@ -244,7 +271,21 @@ Based on code analysis, infer dependencies between requirements:
 
 ---
 
-## Phase 4: Review and Save
+## Phase 4: Review, Validate, and Save
+
+### 4a. Validate Structure
+
+Before presenting to the user, verify the generated JSON against this checklist:
+
+1. Top-level key is `"requirements"` (NOT `"tasks"`)
+2. Every requirement has: `id`, `category`, `description`, `acceptance`, `tdd`, `verification`, `passes`
+3. Every `tdd` object has: `test` (with `description`, `file`, `passes: false`), `implement` (with `description`, `passes: false`), `refactor` (with `description`, `passes: false`)
+4. Every `acceptance` is an array of strings (not `acceptance_criteria`)
+5. Every `description` is a string (not `title` or `name`)
+
+If any check fails, fix the JSON before proceeding. Do NOT save a file that fails validation.
+
+### 4b. Review with User
 
 1. Present the complete JSON structure to the user
 2. Highlight any requirements marked `already-done` (no implementation needed)
@@ -258,7 +299,7 @@ Based on code analysis, infer dependencies between requirements:
 When given an existing tasks JSON file with `--refresh`:
 
 ```
-/tasks docs/autopilot/feature.json --refresh
+/tasks docs/autopilotagent/feature.json --refresh
 ```
 
 ### Refresh Behavior
@@ -266,7 +307,7 @@ When given an existing tasks JSON file with `--refresh`:
 1. **Preserve completed work:** Keep all requirements where `passes: true`
 2. **Re-analyze incomplete:** Run Phase 0-1 for requirements where `passes: false`
 3. **Update codeAnalysis:** Refresh file lists and approaches based on current code state
-4. **Detect newly done:** Mark requirements `already-done` if implementation was completed outside autopilot
+4. **Detect newly done:** Mark requirements `already-done` if implementation was completed outside autopilotagent
 5. **Update notes:** Log refresh in the corresponding notes file
 
 ### When to Refresh
@@ -304,4 +345,4 @@ When given an existing tasks JSON file with `--refresh`:
 
 ## Next Step
 
-After generating the JSON, use `/autopilot [json-file]` to run autonomous TDD execution.
+After generating the JSON, use `/autopilotagent [json-file]` to run autonomous TDD execution.

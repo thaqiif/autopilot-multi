@@ -1,5 +1,5 @@
 {
-  "$schema": "../autopilot.schema.json",
+  "$schema": "../autopilotagent.schema.json",
   "version": "1.0.0",
   "project": {
     "type": "test",

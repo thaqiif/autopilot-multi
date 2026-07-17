@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/analytics.schema.json",
-  "title": "Autopilot Session Analytics",
+  "$id": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/analytics.schema.json",
+  "title": "Autopilotagent Session Analytics",
   "description": "Per-session analytics for tracking token efficiency and identifying waste patterns",
   "type": "object",
   "required": ["sessionId", "startedAt", "taskFile", "mode", "requirements"],
@@ -31,7 +31,7 @@
     "mode": {
       "type": "string",
       "enum": ["tasks", "tests", "lint", "entropy"],
-      "description": "Autopilot mode for this session"
+      "description": "Autopilotagent mode for this session"
     },
     "maxIterations": {
       "type": "integer",

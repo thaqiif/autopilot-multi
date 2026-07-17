@@ -1,6 +1,6 @@
-# Autopilot Init
+# Autopilotagent Init
 
-Initialize this project for autopilot by detecting project configuration and creating `autopilot.json`.
+Initialize this project for autopilotagent by detecting project configuration and creating `autopilotagent.json`.
 
 ## Overview
 
@@ -9,7 +9,7 @@ This command performs comprehensive project analysis and setup:
 1. **Pre-flight checks** - Verify environment is ready
 2. **Codebase analysis** - Detect project type and conventions
 3. **Server configuration** - Detect git remote and server type
-4. **Configuration file** - Create or update `autopilot.json`
+4. **Configuration file** - Create or update `autopilotagent.json`
 5. **Validation** - Verify all settings work
 
 ## Execution Steps
@@ -90,7 +90,7 @@ Detect based on config files found.
 #### 1.4 Warning for Missing Feedback Loops
 
 If no test runner, linter, or type checker is detected:
-- Warn the user: "No feedback loops detected. Autopilot works best with tests, linting, and type checking."
+- Warn the user: "No feedback loops detected. Autopilotagent works best with tests, linting, and type checking."
 - Ask if they want to continue with limited feedback loops
 - Suggest adding these tools to their project
 
@@ -169,7 +169,7 @@ Parse the origin URL to extract:
 - **Repo**: Repository name
 
 Examples:
-- `git@github.com:Gens-ai/autopilot.git` → github, Gens-ai, autopilot
+- `git@github.com:Gens-ai/autopilotagent.git` → github, Gens-ai, autopilotagent
 - `https://github.com/user/repo.git` → github, user, repo
 - `git@gitlab.com:org/project.git` → gitlab, org, project
 
@@ -190,9 +190,9 @@ If no or not available, leave as null.
 
 #### 4.1 Check Existing Configuration
 
-Check if `autopilot.json` already exists in the project root.
+Check if `autopilotagent.json` already exists in the project root.
 
-- **If exists**: Read it and ask "autopilot.json already exists. Do you want to (u)pdate it with new detections, (o)verwrite completely, or (s)kip? [u/o/s]"
+- **If exists**: Read it and ask "autopilotagent.json already exists. Do you want to (u)pdate it with new detections, (o)verwrite completely, or (s)kip? [u/o/s]"
 - **If not exists**: Proceed to create new file
 
 #### 4.2 Build Configuration Object
@@ -201,7 +201,7 @@ Construct the configuration based on all detected values:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/autopilot.schema.json",
+  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/autopilotagent.schema.json",
   "version": "1.0.0",
   "project": {
     "type": "<detected-type>",
@@ -274,7 +274,7 @@ If user wants to edit, ask which field to change and update accordingly.
 
 #### 4.4 Write Configuration
 
-Write the configuration to `autopilot.json` in the project root.
+Write the configuration to `autopilotagent.json` in the project root.
 
 ---
 
@@ -282,7 +282,7 @@ Write the configuration to `autopilot.json` in the project root.
 
 #### 5.1 Validate Configuration
 
-Read back `autopilot.json` and verify:
+Read back `autopilotagent.json` and verify:
 - JSON is valid
 - Required fields are present
 - Values are reasonable
@@ -320,18 +320,18 @@ If MCP server is configured and user wants to test:
 Report final status:
 
 ```
-Autopilot initialization complete!
+Autopilotagent initialization complete!
 
-Configuration saved to: autopilot.json
+Configuration saved to: autopilotagent.json
 
 Next steps:
-1. Review autopilot.json and adjust if needed
-2. Commit autopilot.json to your repository
+1. Review autopilotagent.json and adjust if needed
+2. Commit autopilotagent.json to your repository
 3. Create a PRD with /prd <feature-description>
 4. Convert to tasks with /tasks <prd-file>
-5. Run /autopilot <tasks.json> to start autonomous development
+5. Run /autopilotagent <tasks.json> to start autonomous development
 
-Run /autopilot --help for all available commands.
+Run /autopilotagent --help for all available commands.
 ```
 
 ---
@@ -352,9 +352,9 @@ Keep questions minimal - only ask what can't be detected.
 
 ## Error Handling
 
-- If not in a git repository: "This directory is not a git repository. Autopilot requires git for version control. Run `git init` first."
-- If no write permission: "Cannot write autopilot.json. Check directory permissions."
-- If user cancels: "Initialization cancelled. Run /autopilot init again when ready."
+- If not in a git repository: "This directory is not a git repository. Autopilotagent requires git for version control. Run `git init` first."
+- If no write permission: "Cannot write autopilotagent.json. Check directory permissions."
+- If user cancels: "Initialization cancelled. Run /autopilotagent init again when ready."
 
 ---
 
@@ -366,13 +366,13 @@ Parse `$ARGUMENTS` for optional flags:
 - `--skip-validation`: Skip feedback loop testing
 - `--no-mcp`: Skip MCP server configuration
 
-Example: `/autopilot init --force`
+Example: `/autopilotagent init --force`
 
 ---
 
 ## Execution
 
-Begin by announcing: "Initializing autopilot configuration for this project..."
+Begin by announcing: "Initializing autopilotagent configuration for this project..."
 
 Then execute each step in order, reporting progress as you go.
 

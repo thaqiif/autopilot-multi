@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilot/main/autopilot.schema.json",
+  "$schema": "https://raw.githubusercontent.com/Gens-ai/autopilotagent/main/autopilotagent.schema.json",
   "version": "1.0.0",
   "project": {
     "type": "typescript",
@@ -99,7 +99,7 @@
   },
   "analytics": {
     "enabled": true,
-    "directory": "docs/autopilot/analytics",
+    "directory": "docs/autopilotagent/analytics",
     "thrashingThreshold": 3
   }
 }
